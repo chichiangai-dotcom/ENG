@@ -4,6 +4,7 @@ from flask_cors import CORS
 from groq import Groq
 import edge_tts
 
+# 解決 Windows 編碼問題
 if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
@@ -11,6 +12,7 @@ if sys.platform == "win32":
 app = Flask(__name__, template_folder='../templates')
 CORS(app)
 
+# 你的 API Key
 RAW_KEY = "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"
 client = Groq(api_key=RAW_KEY)
 
@@ -22,7 +24,7 @@ def transcribe():
     try:
         file = request.files['file']
         buffer = io.BytesIO(file.read())
-        buffer.name = "speech.wav" 
+        buffer.name = "audio.mp3" # 讓 Groq 自動辨識多種手機格式
         transcription = client.audio.transcriptions.create(
             file=buffer, model="whisper-large-v3", language="en", response_format="text"
         )
@@ -38,40 +40,20 @@ def chat():
         level = data.get("level", "Intermediate")
         ui_lang = data.get("uiLang", "zh") 
         
-        # 擴充的實用情境
         scenarios = {
-            "Travel": "a friendly hotel receptionist or tourist guide helping the user on their vacation.",
-            "Restaurant": "a waiter at a popular local restaurant taking the user's order.",
-            "Interview": "an HR Manager interviewing the user for a professional job.",
-            "Pronunciation": "a strict pronunciation coach. Give the user ONE short English sentence to read aloud, and evaluate their pronunciation.",
-            "General": "a friendly English tutor for casual free conversation."
+            "Travel": "a friendly hotel receptionist or tourist guide.",
+            "Restaurant": "a waiter taking the user's order.",
+            "Interview": "an HR Manager interviewing the user.",
+            "Pronunciation": "a strict coach. Give a short sentence to read and evaluate.",
+            "General": "a friendly tutor for free conversation."
         }
-
-        # 根據介面語系決定「解說提示」的語言，但「主文」強制英文，「翻譯」強制中文
         tip_lang = "Traditional Chinese (Taiwan)" if ui_lang == "zh" else "English"
 
         system_prompt = (
-            f"You are a top-tier English Coach. Current Scenario: {scenarios.get(scene, 'General')}. "
-            f"User's Level: {level}. "
-            "Respond ONLY in valid JSON format. "
-            "CRITICAL RULES: "
-            "1. 'reply' MUST ALWAYS be in English. "
-            "2. 'translation' MUST ALWAYS be the Traditional Chinese translation of the reply. "
-            f"3. 'tip' MUST be written in {tip_lang}. "
-            "JSON structure: "
-            "{"
-            "  \"reply\": \"English spoken response\","
-            "  \"translation\": \"繁體中文翻譯\","
-            "  \"feedback\": {"
-            "    \"grammar_score\": 100,"
-            "    \"correction\": \"Corrected sentence (or null)\","
-            "    \"pronunciation\": {"
-            "      \"word\": \"Target word\","
-            "      \"ipa\": \"IPA symbol\","
-            "      \"tip\": \"Pronunciation explanation\""
-            "    }"
-            "  }"
-            "}"
+            f"You are a professional English Coach. Scenario: {scenarios.get(scene, 'General')}. "
+            f"User Level: {level}. Respond ONLY in JSON format. "
+            f"CRITICAL: 'reply' in English, 'translation' in Trad. Chinese, 'tip' in {tip_lang}. "
+            "JSON: {\"reply\": \"...\", \"translation\": \"...\", \"feedback\": {\"grammar_score\": 100, \"correction\": \"...\", \"pronunciation\": {\"word\": \"...\", \"ipa\": \"...\", \"tip\": \"...\"}}}"
         )
 
         completion = client.chat.completions.create(
@@ -80,29 +62,21 @@ def chat():
             response_format={"type": "json_object"}
         )
         return jsonify(json.loads(completion.choices[0].message.content))
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"reply": "I had a system hiccup. Can you repeat?", "translation": "系統出錯，能重說一次嗎？"}), 200
+    except: return jsonify({"reply": "System Error", "translation": "系統錯誤"}), 200
 
 @app.route("/api/tts", methods=["GET"])
 def tts():
     text = request.args.get("text", "")
     voice = request.args.get("voice", "en-US-AvaNeural") 
-    if not text: return "No text", 400
-    
     async def gen():
         comm = edge_tts.Communicate(text, voice)
         data = b""
         async for chunk in comm.stream():
             if chunk["type"] == "audio": data += chunk["data"]
         return data
-        
-    try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        res = loop.run_until_complete(gen())
-        loop.close()
-        return send_file(io.BytesIO(res), mimetype="audio/mpeg")
-    except: return "TTS Error", 500
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    res = loop.run_until_complete(gen())
+    return send_file(io.BytesIO(res), mimetype="audio/mpeg")
 
 if __name__ == "__main__": app.run(host="127.0.0.1", port=5000, debug=True)
