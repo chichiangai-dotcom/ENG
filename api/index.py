@@ -70,7 +70,6 @@ def chat():
             level_guide = {"Beginner": "A1/A2.", "Intermediate": "B1/B2.", "Advanced": "C1/C2."}
             scenarios = {"Path": f"an English tutor teaching Lesson {lesson_num} of 10 about {topic}.", "Explore": f"an expert test examiner in {topic}."}
             
-            # 🔥 核心修正：強制 AI 主動帶領對話，不准重複問候！
             system_prompt = (
                 f"You are {scenarios.get(scene, 'a friendly tutor')}. Level: {level_guide.get(level)} "
                 "CRITICAL INSTRUCTION: You MUST actively lead the conversation. "
