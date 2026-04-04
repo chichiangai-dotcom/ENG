@@ -22,18 +22,23 @@ def transcribe():
     try:
         file = request.files['file']
         buffer = io.BytesIO(file.read())
-        buffer.name = "audio.mp3" 
+        buffer.name = "audio.wav" 
         
-        # --- 核心優化：加入 prompt 引導辨識 ---
+        # --- 核心強化：加入引導詞 (Prompt) 與 參數調整 ---
         transcription = client.audio.transcriptions.create(
             file=buffer, 
             model="whisper-large-v3", 
             language="en", 
             response_format="text",
-            prompt="This is an English learning session. The user is practicing spoken English conversation."
+            temperature=0, # 降低隨機性，提高精準度
+            prompt="The following is a student practicing English speaking. Correct common pronunciation errors into valid English words. The context is daily conversation and language learning."
         )
-        return jsonify({"text": str(transcription).strip()})
-    except: return jsonify({"error": "STT Failed"}), 500
+        result = str(transcription).strip()
+        print(f"精準辨識結果: {result}")
+        return jsonify({"text": result})
+    except: 
+        traceback.print_exc()
+        return jsonify({"error": "STT Failed"}), 500
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
@@ -48,15 +53,14 @@ def chat():
             "Travel": "a friendly hotel receptionist.",
             "Restaurant": "a waiter.",
             "Interview": "an HR Manager.",
-            "Pronunciation": "a strict coach. Give a short sentence to read and evaluate.",
-            "General": "a friendly tutor for free conversation."
+            "Pronunciation": "a strict coach.",
+            "General": "a friendly tutor."
         }
         tip_lang = "Traditional Chinese (Taiwan)" if ui_lang == "zh" else "English"
 
         system_prompt = (
             f"You are a professional English Coach. Scenario: {scenarios.get(scene, 'General')}. "
             f"User Level: {level}. Respond ONLY in JSON format. "
-            f"CRITICAL: 'reply' in English, 'translation' in Trad. Chinese, 'tip' in {tip_lang}. "
             "JSON: {\"reply\": \"...\", \"translation\": \"...\", \"feedback\": {\"grammar_score\": 100, \"correction\": \"...\", \"pronunciation\": {\"word\": \"...\", \"ipa\": \"...\", \"tip\": \"...\"}}}"
         )
 
@@ -66,7 +70,7 @@ def chat():
             response_format={"type": "json_object"}
         )
         return jsonify(json.loads(completion.choices[0].message.content))
-    except: return jsonify({"reply": "System Error", "translation": "系統錯誤"}), 200
+    except: return jsonify({"reply": "Error", "translation": "錯誤"}), 200
 
 @app.route("/api/tts", methods=["GET"])
 def tts():
