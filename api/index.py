@@ -24,21 +24,17 @@ def transcribe():
         buffer = io.BytesIO(file.read())
         buffer.name = "audio.wav" 
         
-        # --- 核心強化：加入引導詞 (Prompt) 與 參數調整 ---
+        # --- 核心優化：加強辨識準確度 ---
         transcription = client.audio.transcriptions.create(
             file=buffer, 
             model="whisper-large-v3", 
             language="en", 
             response_format="text",
-            temperature=0, # 降低隨機性，提高精準度
-            prompt="The following is a student practicing English speaking. Correct common pronunciation errors into valid English words. The context is daily conversation and language learning."
+            temperature=0, # 降低隨機性，讓結果更穩定
+            prompt="The user is a student practicing English speaking. Please transcribe the English speech accurately, even if there are minor pronunciation errors."
         )
-        result = str(transcription).strip()
-        print(f"精準辨識結果: {result}")
-        return jsonify({"text": result})
-    except: 
-        traceback.print_exc()
-        return jsonify({"error": "STT Failed"}), 500
+        return jsonify({"text": str(transcription).strip()})
+    except: return jsonify({"error": "STT Failed"}), 500
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
@@ -61,6 +57,7 @@ def chat():
         system_prompt = (
             f"You are a professional English Coach. Scenario: {scenarios.get(scene, 'General')}. "
             f"User Level: {level}. Respond ONLY in JSON format. "
+            f"CRITICAL: 'reply' in English, 'translation' in Trad. Chinese, 'tip' in {tip_lang}. "
             "JSON: {\"reply\": \"...\", \"translation\": \"...\", \"feedback\": {\"grammar_score\": 100, \"correction\": \"...\", \"pronunciation\": {\"word\": \"...\", \"ipa\": \"...\", \"tip\": \"...\"}}}"
         )
 
