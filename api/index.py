@@ -22,25 +22,19 @@ def transcribe():
     try:
         file = request.files['file']
         file_content = file.read()
-        
-        # 1. 檢查檔案大小，過小視為無聲
         if len(file_content) < 2000: 
             return jsonify({"text": "", "error": "silent"})
-
         buffer = io.BytesIO(file_content)
         buffer.name = "audio.mp3" 
         
         transcription = client.audio.transcriptions.create(
             file=buffer, model="whisper-large-v3", language="en", response_format="text",
-            temperature=0, prompt="Daily English conversation. Return empty if silent or just background noise."
+            temperature=0, prompt="Daily English conversation. Return empty if silent or just noise."
         )
         result = str(transcription).strip()
-        
-        # 2. 過濾 Whisper 幻覺 (解決沒講話卻出現 Thank you 的問題)
         hallucinations = ["thank you", "thanks for watching", "subtitles", "subscribe", "thanks."]
         if any(h in result.lower() for h in hallucinations) and len(result) < 25:
             result = ""
-            
         return jsonify({"text": result})
     except: return jsonify({"error": "STT Failed"}), 500
 
@@ -53,34 +47,31 @@ def chat():
         level = data.get("level", "Intermediate")
         topic = data.get("topic", "General")
         target_word = data.get("target_word", "")
+        lesson_num = data.get("lesson_num", 1) # 新增：接收第幾課
         
         system_prompt = ""
         
         if scene == "Pronunciation_Eval":
-            # 發音特訓：嚴格比對並回傳 is_correct
             system_prompt = (
-                f"You are a strict pronunciation judge. The target word is: '{target_word}'. "
-                f"The user's speech recognition result is: '{user_msg}'. "
-                "1. Determine if the user successfully pronounced the word (allow minor STT misspellings if it sounds identical). Provide boolean 'is_correct'. "
-                "2. If incorrect, provide an HTML string highlighting the wrong parts in RED. Example: <span style='color:red; font-weight:bold;'>wrong_part</span>. "
-                "Respond in JSON: {\"reply\": \"Encouraging feedback in English\", \"translation\": \"繁體中文回饋\", \"feedback\": {\"pron_html\": \"Highlighted word or correct word\", \"is_correct\": true/false}}"
+                f"You are a strict pronunciation judge. Target word: '{target_word}'. "
+                f"User's speech: '{user_msg}'. "
+                "1. Determine if the user successfully pronounced it. Provide boolean 'is_correct'. "
+                "2. If incorrect, provide HTML highlighting the wrong parts in RED. Example: <span style='color:red; font-weight:bold;'>wrong_part</span>. "
+                "JSON: {\"reply\": \"Encouraging feedback in English\", \"translation\": \"繁體中文回饋\", \"feedback\": {\"pron_html\": \"Highlighted word\", \"is_correct\": true/false}}"
             )
         elif scene == "Assistant":
-            # 自由 AI 專家：不受語言教學限制
             system_prompt = (
-                f"You are a world-class expert in: {topic}. You are a helpful AI Assistant. "
-                "Answer the user's questions or chat about anything they want based on your expertise. "
-                "Do NOT act as an English teacher. Just be a helpful expert. "
-                "Respond entirely in Traditional Chinese unless the user asks for English. "
-                "JSON format: {\"reply\": \"Your full answer\", \"translation\": \"\"}"
+                f"You are a world-class expert in: {topic}. Answer the user's questions freely. "
+                "Respond entirely in Traditional Chinese unless asked for English. "
+                "JSON format: {\"reply\": \"Your answer\", \"translation\": \"\"}"
             )
         else:
-            # 學習與探索：正常語言教學
-            level_guide = {"Beginner": "A1/A2 level.", "Intermediate": "B1/B2 level.", "Advanced": "C1/C2 level."}
-            scenarios = {"Path": f"an English tutor for {topic}.", "Explore": f"an expert in {topic} test prep."}
+            level_guide = {"Beginner": "A1/A2.", "Intermediate": "B1/B2.", "Advanced": "C1/C2."}
+            # AI 會根據「第幾課」來給出對應的課程內容
+            scenarios = {"Path": f"an English tutor teaching Lesson {lesson_num} of 10 about {topic}.", "Explore": f"an expert in {topic}."}
             
             system_prompt = (
-                f"You are {scenarios.get(scene, 'a friendly tutor')}. {level_guide.get(level)} "
+                f"You are {scenarios.get(scene, 'a friendly tutor')}. Level: {level_guide.get(level)} "
                 "Respond ONLY in JSON. "
                 "JSON: {\"reply\": \"English reply\", \"translation\": \"繁體中文翻譯\", \"feedback\": {\"correction\": \"Correction if any, else null\"}}"
             )
