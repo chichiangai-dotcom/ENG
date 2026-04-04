@@ -21,18 +21,27 @@ def index(): return render_template("index.html")
 def transcribe():
     try:
         file = request.files['file']
-        buffer = io.BytesIO(file.read())
+        file_content = file.read()
+        
+        # 1. 檢查檔案大小，過小視為無聲
+        if len(file_content) < 2000: 
+            return jsonify({"text": "", "error": "silent"})
+
+        buffer = io.BytesIO(file_content)
         buffer.name = "audio.mp3" 
         
         transcription = client.audio.transcriptions.create(
-            file=buffer, 
-            model="whisper-large-v3", 
-            language="en", 
-            response_format="text",
-            temperature=0,
-            prompt="This is an English learning session. Correct pronunciation errors into proper English words."
+            file=buffer, model="whisper-large-v3", language="en", response_format="text",
+            temperature=0, prompt="Daily English conversation. Return empty if the audio is silent or just noise."
         )
-        return jsonify({"text": str(transcription).strip()})
+        result = str(transcription).strip()
+        
+        # 2. 徹底過濾 Whisper 的無聲幻覺 (Thank you syndrome)
+        hallucinations = ["thank you", "thanks for watching", "subtitles", "subscribe"]
+        if any(h in result.lower() for h in hallucinations) and len(result) < 25:
+            result = ""
+            
+        return jsonify({"text": result})
     except: return jsonify({"error": "STT Failed"}), 500
 
 @app.route("/api/chat", methods=["POST"])
@@ -42,28 +51,46 @@ def chat():
         user_msg = data.get("message", "")
         scene = data.get("scenario", "General")
         level = data.get("level", "Intermediate")
-        ui_lang = data.get("uiLang", "zh") 
-        topic = data.get("topic", "日常閒聊") # 接收前端選取的主題或職業
+        topic = data.get("topic", "General")
+        target_word = data.get("target_word", "") # 發音特訓用的目標單字
         
-        # 定義多種動態情境
-        scenarios = {
-            "Travel": "a friendly hotel receptionist or customs officer.",
-            "Restaurant": "a waiter taking orders at a nice restaurant.",
-            "Interview": "an HR Manager conducting a job interview.",
-            "Pronunciation": f"a strict pronunciation coach. The topic is {topic}. Give a short sentence related to this topic for the user to read.",
-            "Path": f"an AI English coach helping the user learn about the specific topic: {topic}. Ask relevant questions to guide them.",
-            "Explore": f"an expert examiner or tutor focusing strictly on: {topic}.",
-            "General": "a friendly tutor for free conversation."
+        # 根據等級調整 AI 深度
+        level_guide = {
+            "Beginner": "Use simple A1/A2 vocabulary and short sentences.",
+            "Intermediate": "Use natural B1/B2 conversational English.",
+            "Advanced": "Use C1/C2 advanced vocabulary and professional idioms."
         }
-        
-        tip_lang = "Traditional Chinese (Taiwan)" if ui_lang == "zh" else "English"
 
-        system_prompt = (
-            f"You are a professional English Coach. Scenario: {scenarios.get(scene, 'General')}. "
-            f"User Level: {level}. Respond ONLY in JSON format. "
-            f"CRITICAL: 'reply' in English, 'translation' in Trad. Chinese, 'tip' in {tip_lang}. "
-            "JSON: {\"reply\": \"...\", \"translation\": \"...\", \"feedback\": {\"grammar_score\": 100, \"correction\": \"...\", \"pronunciation\": {\"word\": \"...\", \"ipa\": \"...\", \"tip\": \"...\"}}}"
-        )
+        # 針對不同場景設定 AI 大腦
+        system_prompt = ""
+        
+        if scene == "Pronunciation_Eval":
+            # 發音特訓模式：比對用戶發音與目標單字，並標示紅字
+            system_prompt = (
+                f"You are a strict pronunciation judge. The user tried to say the word: '{target_word}'. "
+                f"What you heard was: '{user_msg}'. "
+                "1. If they are completely correct, praise them. "
+                "2. If they are wrong, provide an HTML string highlighting the wrong parts in RED. Example: <span style='color:red; font-weight:bold;'>target_word_with_error_highlighted</span>. "
+                "Respond in JSON: {\"reply\": \"Your feedback in English\", \"translation\": \"繁體中文回饋\", \"feedback\": {\"pron_html\": \"Highlighted word or exact word if correct\"}}"
+            )
+        elif scene == "Assistant":
+            # 全能助理模式
+            system_prompt = (
+                "You are a highly intelligent, omniscient AI Assistant. You can answer ANY question (coding, weather, facts, translation, etc.) freely without acting as a language teacher. "
+                "Respond directly to the user's prompt. JSON format: {\"reply\": \"Your full answer\", \"translation\": \"\"}"
+            )
+        else:
+            # 學習與探索模式
+            scenarios = {
+                "Path": f"an English tutor teaching {topic} at {level} level.",
+                "Explore": f"an expert guiding the user through {topic} preparation at {level} level.",
+                "General": "a friendly tutor."
+            }
+            system_prompt = (
+                f"You are {scenarios.get(scene, 'a friendly tutor')}. {level_guide.get(level)} "
+                "Respond ONLY in valid JSON format. "
+                "JSON: {\"reply\": \"English reply\", \"translation\": \"繁體中文翻譯\", \"feedback\": {\"correction\": \"Correction if any, else null\"}}"
+            )
 
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
@@ -71,7 +98,9 @@ def chat():
             response_format={"type": "json_object"}
         )
         return jsonify(json.loads(completion.choices[0].message.content))
-    except: return jsonify({"reply": "System Error", "translation": "系統錯誤"}), 200
+    except Exception as e: 
+        traceback.print_exc()
+        return jsonify({"reply": "System Error. Please try again.", "translation": "系統錯誤，請再試一次。"}), 200
 
 @app.route("/api/tts", methods=["GET"])
 def tts():
