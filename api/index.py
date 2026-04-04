@@ -4,7 +4,6 @@ from flask_cors import CORS
 from groq import Groq
 import edge_tts
 
-# 解決 Windows 編碼問題
 if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
     sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
@@ -12,7 +11,6 @@ if sys.platform == "win32":
 app = Flask(__name__, template_folder='../templates')
 CORS(app)
 
-# 你的 API Key
 RAW_KEY = "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"
 client = Groq(api_key=RAW_KEY)
 
@@ -24,9 +22,15 @@ def transcribe():
     try:
         file = request.files['file']
         buffer = io.BytesIO(file.read())
-        buffer.name = "audio.mp3" # 讓 Groq 自動辨識多種手機格式
+        buffer.name = "audio.mp3" 
+        
+        # --- 核心優化：加入 prompt 引導辨識 ---
         transcription = client.audio.transcriptions.create(
-            file=buffer, model="whisper-large-v3", language="en", response_format="text"
+            file=buffer, 
+            model="whisper-large-v3", 
+            language="en", 
+            response_format="text",
+            prompt="This is an English learning session. The user is practicing spoken English conversation."
         )
         return jsonify({"text": str(transcription).strip()})
     except: return jsonify({"error": "STT Failed"}), 500
@@ -41,9 +45,9 @@ def chat():
         ui_lang = data.get("uiLang", "zh") 
         
         scenarios = {
-            "Travel": "a friendly hotel receptionist or tourist guide.",
-            "Restaurant": "a waiter taking the user's order.",
-            "Interview": "an HR Manager interviewing the user.",
+            "Travel": "a friendly hotel receptionist.",
+            "Restaurant": "a waiter.",
+            "Interview": "an HR Manager.",
             "Pronunciation": "a strict coach. Give a short sentence to read and evaluate.",
             "General": "a friendly tutor for free conversation."
         }
