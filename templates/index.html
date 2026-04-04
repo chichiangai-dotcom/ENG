@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AI Coach Pro - Total Progress Display</title>
+    <title>AI Coach Pro - Deep Progression</title>
     <style>
-        /* 基礎變數與重置 */
         :root { 
             --bg-dark: #100C20; --bg-card: #23203B; --primary: #4DA2FF; 
             --secondary: #7C4DFF; --text-main: #FFFFFF; --text-sub: #A0A0B5; 
@@ -15,7 +14,7 @@
         body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-main); display: flex; justify-content: center; height: 100dvh; overflow: hidden; }
         .app-shell { width: 100%; max-width: 480px; height: 100%; display: flex; flex-direction: column; position: relative; background: linear-gradient(180deg, #1C1836 0%, var(--bg-dark) 100%); padding-bottom: env(safe-area-inset-bottom); overflow: hidden; }
 
-        /* 側邊欄 (歷史紀錄) */
+        /* 側邊欄與通用組件 */
         .sidebar { position: absolute; top: 0; left: 0; width: 280px; height: 100%; background: #16122B; z-index: 999; transform: translateX(-100%); transition: 0.3s; display: flex; flex-direction: column; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
         .sidebar.active { transform: translateX(0); }
         .sb-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 998; display: none; }
@@ -28,12 +27,10 @@
         .action-btns { display: flex; gap: 10px; }
         .action-btn { padding: 5px; font-size: 0.9rem; cursor: pointer; }
 
-        /* 視窗控制 */
         .screen { flex: 1; overflow-y: auto; display: none; flex-direction: column; padding: 0 20px; padding-bottom: 110px; -webkit-overflow-scrolling: touch; }
         .screen.active { display: flex; animation: fadeIn 0.3s ease; }
         .screen::-webkit-scrollbar { display: none; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
         .top-nav { padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 10; }
         .icon-btn { font-size: 1.5rem; cursor: pointer; color: white; padding: 5px; }
         
@@ -46,7 +43,7 @@
         .topic-pill { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
         .topic-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
 
-        /* 課程與探索卡片 */
+        /* 卡片與內容 */
         .pronun-card { background: linear-gradient(135deg, rgba(77, 162, 255, 0.1), rgba(124, 77, 255, 0.1)); border: 1px solid var(--primary); border-radius: 15px; padding: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; }
         .pronun-card:active { transform: scale(0.98); }
         .path-box { background: var(--bg-card); border-radius: 15px; overflow: hidden; margin-bottom: 20px; }
@@ -59,20 +56,24 @@
         .chat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
         .chat-opt { background: var(--bg-card); padding: 20px 15px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
 
-        /* --- 視覺化進度條樣式 --- */
-        .prog-card { background: var(--bg-card); border-radius: 15px; padding: 15px 20px; margin-bottom: 15px; }
-        .prog-title { font-size: 1.05rem; font-weight: bold; margin-bottom: 15px; color: white; display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 10px;}
-        .prog-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
-        .prog-label { width: 85px; font-size: 0.8rem; color: var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 500;}
-        .prog-bar-wrap { flex: 1; height: 10px; background: rgba(255,255,255,0.05); border-radius: 5px; overflow: hidden; position: relative;}
-        .prog-bar-fill { height: 100%; border-radius: 5px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
-        .prog-pct { width: 90px; text-align: right; font-size: 0.75rem; font-family: monospace; color: var(--text-sub);}
+        /* 🔥 折疊選單專屬樣式 (Accordions) */
+        .acc-item { margin-bottom: 15px; }
+        .acc-header { padding: 18px 20px; display: flex; justify-content: space-between; cursor: pointer; background: var(--bg-card); border-radius: 12px; font-weight: bold; border: 1px solid rgba(255,255,255,0.05); align-items: center;}
+        .acc-header:active { background: var(--bg-card-hover); }
+        .acc-header .arrow { transition: transform 0.3s ease; color: var(--primary); }
+        .acc-header.open .arrow { transform: rotate(180deg); }
+        .acc-body { display: none; padding: 10px 5px; animation: fadeIn 0.2s ease; }
+        
+        .sub-acc-header { padding: 15px; display: flex; justify-content: space-between; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.95rem; background: rgba(0,0,0,0.2); border-radius: 8px; margin-bottom: 5px; align-items: center; }
+        .sub-acc-header.open .arrow { transform: rotate(180deg); color: var(--primary); }
+        .sub-acc-body { display: none; padding: 15px; background: rgba(0,0,0,0.1); border-radius: 0 0 8px 8px; margin-top: -5px; margin-bottom: 10px;}
 
-        /* 對話視窗內的頂部狀態進度條 */
-        .session-header { padding: 10px; background: rgba(16, 12, 32, 0.95); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid rgba(255,255,255,0.05); display: none;}
-        .session-title { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-sub); margin-bottom: 5px; }
-        .session-prog-wrap { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
-        .session-prog-fill { height: 100%; width: 0%; background: var(--success); transition: width 0.5s; }
+        /* 進度條列 */
+        .prog-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        .prog-label { width: 70px; font-size: 0.8rem; color: var(--text-main); font-weight: 500;}
+        .prog-bar-wrap { flex: 1; height: 10px; background: rgba(255,255,255,0.05); border-radius: 5px; overflow: hidden; }
+        .prog-bar-fill { height: 100%; border-radius: 5px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        .prog-pct { width: 85px; text-align: right; font-size: 0.75rem; font-family: monospace; color: var(--text-sub);}
 
         /* 聊天與發音卡片 */
         .bubble { max-width: 85%; padding: 12px 16px; border-radius: 18px; margin-bottom: 12px; line-height: 1.4; font-size: 0.9rem; word-wrap: break-word; }
@@ -82,6 +83,11 @@
         .elsa-card { background: white; color: #333; border-radius: 15px; padding: 20px; margin: 15px 0; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
         .elsa-card .word { font-size: 2rem; font-weight: 800; color: #100C20; margin-bottom: 5px; }
         .elsa-card .ipa { color: var(--secondary); font-family: monospace; font-size: 1.2rem; margin-bottom: 10px; }
+
+        .session-header { padding: 10px; background: rgba(16, 12, 32, 0.95); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid rgba(255,255,255,0.05); display: none;}
+        .session-title { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-sub); margin-bottom: 5px; }
+        .session-prog-wrap { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+        .session-prog-fill { height: 100%; width: 0%; background: var(--success); transition: width 0.5s; }
 
         /* 底部導覽列 */
         .bottom-nav { position: absolute; bottom: 0; width: 100%; background: rgba(16, 12, 32, 0.98); display: flex; justify-content: space-around; align-items: center; height: 80px; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid rgba(255,255,255,0.05); z-index: 100; transition: transform 0.3s; }
@@ -119,17 +125,17 @@
             <div class="lvl-btn" onclick="setLevel('Advanced')">C1 高級</div>
         </div>
         <div class="topic-scroll">
-            <div class="topic-pill active" onclick="setTopic('科技電腦')">💻 科技電腦</div>
-            <div class="topic-pill" onclick="setTopic('商務職場')">💼 商務職場</div>
-            <div class="topic-pill" onclick="setTopic('旅遊通關')">✈️ 旅遊通關</div>
-            <div class="topic-pill" onclick="setTopic('日常社交')">🛒 日常社交</div>
+            <div class="topic-pill active" onclick="setTopic('科技電腦')">💻 科技</div>
+            <div class="topic-pill" onclick="setTopic('商務職場')">💼 商務</div>
+            <div class="topic-pill" onclick="setTopic('旅遊通關')">✈️ 旅遊</div>
+            <div class="topic-pill" onclick="setTopic('日常社交')">🛒 日常</div>
         </div>
 
         <div class="pronun-card" onclick="startPronunciationSession()">
             <div style="font-size:2.5rem;">🗣️</div>
             <div style="flex:1;">
                 <div style="font-weight:bold; font-size:1.1rem; color:var(--primary);">專屬發音特訓</div>
-                <div style="font-size:0.8rem; color:var(--text-sub); margin-top:3px;">透過紅字精準糾錯 (2000字庫)</div>
+                <div style="font-size:0.8rem; color:var(--text-sub); margin-top:3px;">精準糾錯，邁向 2000 核心單字</div>
             </div>
         </div>
 
@@ -137,17 +143,13 @@
             <div class="path-header">
                 <div style="font-size:0.8rem; color:var(--text-sub); margin-bottom:5px;">漸進式對話課程</div>
                 <div style="font-size:1.3rem; font-weight:bold;" id="dash-title">科技電腦</div>
-                
                 <div style="margin-top: 15px;">
                     <div style="display:flex; justify-content:space-between; font-size:0.75rem; margin-bottom:5px;">
-                        <span style="color:var(--primary);">本類別課程進度</span>
+                        <span style="color:var(--primary);">當前等級進度</span>
                         <span id="dash-topic-pct">0 / 10 課 (0%)</span>
                     </div>
-                    <div class="prog-bar-wrap" style="height:6px; background: rgba(255,255,255,0.1);">
-                        <div class="prog-bar-fill" id="dash-topic-fill" style="background:var(--primary); width:0%;"></div>
-                    </div>
+                    <div class="prog-bar-wrap" style="height:6px; background: rgba(255,255,255,0.1);"><div class="prog-bar-fill" id="dash-topic-fill" style="background:var(--primary); width:0%;"></div></div>
                 </div>
-
             </div>
             <div id="lessonList"></div>
         </div>
@@ -166,7 +168,7 @@
                 <div style="flex:1;">
                     <div style="font-weight:bold;">TOEIC 口說衝刺</div>
                     <div style="font-size:0.75rem; color:var(--text-sub); margin-top:5px; display:flex; justify-content:space-between;">
-                        <span>單元進度</span> <span id="exp-toeic-text">0 / 20 (0%)</span>
+                        <span>當前等級進度</span> <span id="exp-toeic-text">0 / 20 (0%)</span>
                     </div>
                     <div class="prog-bar-wrap" style="height:4px; margin-top:3px;"><div class="prog-bar-fill" id="exp-toeic-fill" style="background:var(--secondary); width:0%;"></div></div>
                 </div>
@@ -176,7 +178,7 @@
                 <div style="flex:1;">
                     <div style="font-weight:bold;">IELTS 雅思模擬考</div>
                     <div style="font-size:0.75rem; color:var(--text-sub); margin-top:5px; display:flex; justify-content:space-between;">
-                        <span>單元進度</span> <span id="exp-ielts-text">0 / 20 (0%)</span>
+                        <span>當前等級進度</span> <span id="exp-ielts-text">0 / 20 (0%)</span>
                     </div>
                     <div class="prog-bar-wrap" style="height:4px; margin-top:3px;"><div class="prog-bar-fill" id="exp-ielts-fill" style="background:var(--secondary); width:0%;"></div></div>
                 </div>
@@ -186,7 +188,7 @@
                 <div style="flex:1;">
                     <div style="font-weight:bold;">海外生存必備</div>
                     <div style="font-size:0.75rem; color:var(--text-sub); margin-top:5px; display:flex; justify-content:space-between;">
-                        <span>單元進度</span> <span id="exp-daily-text">0 / 20 (0%)</span>
+                        <span>當前等級進度</span> <span id="exp-daily-text">0 / 20 (0%)</span>
                     </div>
                     <div class="prog-bar-wrap" style="height:4px; margin-top:3px;"><div class="prog-bar-fill" id="exp-daily-fill" style="background:var(--secondary); width:0%;"></div></div>
                 </div>
@@ -196,7 +198,7 @@
 
     <div id="tab-aichat" class="screen">
         <h2 style="margin-top:0;">全能 AI 助理庫</h2>
-        <p style="font-size:0.85rem; color:var(--text-sub); margin-bottom:15px;">解答你生活中的任何問題（程式、旅遊、常識等）。</p>
+        <p style="font-size:0.85rem; color:var(--text-sub); margin-bottom:15px;">解答你生活中的任何問題（不限於學英文）。</p>
         <div class="chat-grid">
             <div class="chat-opt" onclick="startChat('Assistant', 'Assistant', 'Programming & Coding Expert')"><div style="font-size:2rem;">👨‍💻</div><div style="font-weight:bold;">程式大神</div></div>
             <div class="chat-opt" onclick="startChat('Assistant', 'Assistant', 'Professional Chef')"><div style="font-size:2rem;">🍳</div><div style="font-weight:bold;">食譜主廚</div></div>
@@ -210,25 +212,31 @@
     <div id="tab-progress" class="screen">
         <h2 style="margin-top:0; margin-bottom: 20px;">全方位學習進度</h2>
         
-        <div class="prog-card">
-            <div class="prog-title"><span>📚 課程完成度</span><span style="font-size:0.8rem; font-weight:normal; color:var(--text-sub);">上限 10 課</span></div>
-            <div id="prog-lessons-container"></div>
+        <div class="acc-item">
+            <div class="acc-header" onclick="toggleAccordion(this)">
+                <span>📚 課程完成度 (10課/級)</span><span class="arrow">▼</span>
+            </div>
+            <div class="acc-body" id="prog-lessons-container"></div>
         </div>
 
-        <div class="prog-card">
-            <div class="prog-title"><span>📖 單字與發音掌握</span><span style="font-size:0.8rem; font-weight:normal; color:var(--text-sub);">上限 2000 字</span></div>
-            <div id="prog-words-container"></div>
+        <div class="acc-item">
+            <div class="acc-header" onclick="toggleAccordion(this)">
+                <span>🧭 探索特訓單元 (20回/級)</span><span class="arrow">▼</span>
+            </div>
+            <div class="acc-body" id="prog-explore-container"></div>
         </div>
 
-        <div class="prog-card">
-            <div class="prog-title"><span>🧭 探索特訓單元</span><span style="font-size:0.8rem; font-weight:normal; color:var(--text-sub);">上限 20 單元</span></div>
-            <div id="prog-explore-container"></div>
+        <div class="acc-item">
+            <div class="acc-header" onclick="toggleAccordion(this)">
+                <span>📖 單字與發音掌握 (2000字/類)</span><span class="arrow">▼</span>
+            </div>
+            <div class="acc-body" id="prog-words-container" style="background:var(--bg-card); padding:15px; border-radius:10px;"></div>
         </div>
     </div>
 
     <div id="tab-chat" class="screen" style="padding-bottom: 120px;">
         <div class="session-header" id="sessionHeader">
-            <div class="session-title"><span id="sessionTopicText">科技電腦 (第 1 課)</span><span id="sessionTurnText">0 / 50</span></div>
+            <div class="session-title"><span id="sessionTopicText"></span><span id="sessionTurnText">0 / 50</span></div>
             <div class="session-prog-wrap"><div class="session-prog-fill" id="sessionProgFill"></div></div>
         </div>
         <div style="text-align: center; color: var(--text-sub); font-size: 0.75rem; margin: 10px 0;" id="chatTitle">Ready</div>
@@ -246,31 +254,35 @@
 </div>
 
 <script>
-    // --- 嚴謹的進度資料庫初始化 ---
+    // --- 嚴謹的進度資料庫 (三維度結構 V6) ---
     const MAX_LESSONS = 10, MAX_WORDS = 2000, MAX_EXPLORE = 20;
     const learnTopics = ['科技電腦', '商務職場', '旅遊通關', '日常社交'];
     const expTopics = ['TOEIC Speaking Test', 'IELTS Speaking Practice', 'Daily Survival'];
     
-    // 強制重置版號，確保舊資料不會導致 0% 無法顯示
-    const currentVersion = "otterProgressV5"; 
+    const currentVersion = "otterProgressV6"; 
     let userData = JSON.parse(localStorage.getItem(currentVersion));
     
-    if (!userData) {
+    // 初始化或遷移結構
+    if (!userData || typeof userData.lessons['科技電腦'] !== 'object') {
         userData = { lessons: {}, words: {}, explore: {} };
-        learnTopics.forEach(t => { userData.lessons[t] = 0; userData.words[t] = 0; });
-        expTopics.forEach(t => { userData.explore[t] = 0; });
+        learnTopics.forEach(t => { 
+            userData.lessons[t] = { 'Beginner': 0, 'Intermediate': 0, 'Advanced': 0 }; 
+            userData.words[t] = 0; // 單字以總數計
+        });
+        expTopics.forEach(t => { 
+            userData.explore[t] = { 'Beginner': 0, 'Intermediate': 0, 'Advanced': 0 }; 
+        });
         localStorage.setItem(currentVersion, JSON.stringify(userData));
     }
 
-    // 發音抽樣庫 (代表性單字)
+    // 發音庫
     const pronDB = {
-        '科技電腦': { 'Beginner': [{w:'Mouse', ipa:'/maʊs/'}, {w:'Screen', ipa:'/skriːn/'}], 'Intermediate': [{w:'Database', ipa:'/ˈdeɪ.tə.beɪs/'}, {w:'Algorithm', ipa:'/ˈæl.ɡə.rɪ.ðəm/'}], 'Advanced': [{w:'Architecture', ipa:'/ˈɑːr.kə.tek.tʃɚ/'}] },
+        '科技電腦': { 'Beginner': [{w:'Mouse', ipa:'/maʊs/'}], 'Intermediate': [{w:'Database', ipa:'/ˈdeɪ.tə.beɪs/'}], 'Advanced': [{w:'Architecture', ipa:'/ˈɑːr.kə.tek.tʃɚ/'}] },
         '商務職場': { 'Beginner': [{w:'Meeting', ipa:'/ˈmiː.t̬ɪŋ/'}], 'Intermediate': [{w:'Negotiation', ipa:'/nəˌɡoʊ.ʃiˈeɪ.ʃən/'}], 'Advanced': [{w:'Acquisition', ipa:'/ˌæk.wəˈzɪʃ.ən/'}] },
         '旅遊通關': { 'Beginner': [{w:'Ticket', ipa:'/ˈtɪk.ɪt/'}], 'Intermediate': [{w:'Itinerary', ipa:'/aɪˈtɪn.ə.rer.i/'}], 'Advanced': [{w:'Customs', ipa:'/ˈkʌs.təmz/'}] },
         '日常社交': { 'Beginner': [{w:'Friend', ipa:'/frend/'}], 'Intermediate': [{w:'Groceries', ipa:'/ˈɡroʊ.sɚ.iz/'}], 'Advanced': [{w:'Acquaintance', ipa:'/əˈkweɪn.təns/'}] }
     };
 
-    // --- 狀態變數 ---
     let userLevel = 'Intermediate', currentTopic = '科技電腦', currentCategory = 'Learn', currentScenario = 'General';
     let currentExploreTopic = null, targetPronWord = null, pronIndex = 0, currentWordList = [], currentLessonNum = 1;
     let sessionTurns = 0; const MAX_TURNS = 50; 
@@ -288,7 +300,6 @@
         if(map[tabId] !== undefined) document.querySelectorAll('.nav-item')[map[tabId]].classList.add('active');
         document.getElementById('topNav').style.display = (tabId === 'chat') ? 'none' : 'flex';
         closeSidebar();
-        
         if(tabId === 'dashboard') updateDashboardProgress();
         if(tabId === 'explore') updateExploreMiniStats();
         if(tabId === 'progress') updateProgressUI();
@@ -302,7 +313,7 @@
         });
         const lvlMap = {'Beginner':'初級 A1','Intermediate':'中級 B1','Advanced':'高級 C1'};
         document.getElementById('topDisplay').innerText = `${lvlMap[lvl]} · 🔥 2`;
-        renderLessons(); 
+        renderLessons(); updateDashboardProgress(); updateExploreMiniStats();
     }
 
     function setTopic(topic) {
@@ -310,12 +321,11 @@
         event.currentTarget.classList.add('active');
         currentTopic = topic;
         document.getElementById('dash-title').innerText = topic;
-        renderLessons();
-        updateDashboardProgress();
+        renderLessons(); updateDashboardProgress();
     }
 
     function updateDashboardProgress() {
-        let val = userData.lessons[currentTopic] || 0;
+        let val = userData.lessons[currentTopic][userLevel] || 0;
         let pct = Math.round((val / MAX_LESSONS) * 100);
         document.getElementById('dash-topic-pct').innerText = `${val} / ${MAX_LESSONS} 課 (${pct}%)`;
         document.getElementById('dash-topic-fill').style.width = `${pct}%`;
@@ -323,23 +333,29 @@
 
     function renderLessons() {
         const container = document.getElementById('lessonList'); container.innerHTML = '';
-        const lessonTitles = ["基礎概念與單字", "常用句型練習", "情境模擬對話 (一)", "文法與時態特訓", "聽力理解挑戰", "情境模擬對話 (二)", "進階詞彙應用", "流暢度與語氣", "綜合情境實戰", "最終驗收測驗"];
-        const completedLessons = userData.lessons[currentTopic] || 0;
+        const lessonTitles = ["基礎概念與單字", "常用句型練習", "情境對話 (一)", "文法與時態", "聽力理解挑戰", "情境對話 (二)", "進階詞彙應用", "流暢度與語氣", "綜合情境實戰", "最終驗收測驗"];
+        const completedLessons = userData.lessons[currentTopic][userLevel] || 0;
         
         for(let i=1; i<=10; i++) {
             let isCompleted = completedLessons >= i;
             let numStyle = isCompleted ? "completed" : "";
-            let icon = isCompleted ? "✓" : i;
             container.innerHTML += `
                 <div class="path-lesson" onclick="startLesson(${i})">
-                    <div class="lesson-num ${numStyle}">${icon}</div>
+                    <div class="lesson-num ${numStyle}">${isCompleted ? "✓" : i}</div>
                     <div style="flex:1;">
                         <div style="font-weight:bold;">第 ${i} 課 - ${lessonTitles[i-1]}</div>
-                        <div style="font-size:0.8rem; color:var(--text-sub);">目標進度: 50 回合對話</div>
+                        <div style="font-size:0.8rem; color:var(--text-sub);">目標進度: 50 回合</div>
                     </div>
                 </div>
             `;
         }
+    }
+
+    // --- 折疊選單 (Accordion) ---
+    function toggleAccordion(el) {
+        el.classList.toggle('open');
+        const body = el.nextElementSibling;
+        body.style.display = el.classList.contains('open') ? 'block' : 'none';
     }
 
     // --- 歷史紀錄系統 ---
@@ -349,13 +365,12 @@
         chatHistory.unshift({ id: currentSessionId, category: cat, title: title, html: '' });
         localStorage.setItem('otterHistoryProMax', JSON.stringify(chatHistory));
         
-        let welcomeMsg = `Hello! Are you ready to start our session? Let's go!`;
+        let welcomeMsg = `Hello! Are you ready to start? Say "OK" to begin!`;
         if (cat === "Assistant") welcomeMsg = `你好！我是 <b>${currentTopic}</b> 的專家，請問有什麼我可以幫忙的？`;
         if (currentScenario === "Pronunciation_Eval") welcomeMsg = `Welcome to Pronunciation Training! Let's get started.`;
         
         chatLog.innerHTML = `<div class="bubble ai"><b>Coach / Assistant</b><br>${welcomeMsg}<div class="trans">準備好開始了嗎？請按住麥克風回覆！</div></div>`;
         
-        // 💡 顯示或隱藏頂部的單堂課進度條
         sessionTurns = 0;
         const sHeader = document.getElementById('sessionHeader');
         if (currentScenario === 'Path' || currentScenario === 'Explore') {
@@ -363,9 +378,7 @@
             document.getElementById('sessionTopicText').innerText = title;
             document.getElementById('sessionTurnText').innerText = `0 / ${MAX_TURNS} (0%)`;
             document.getElementById('sessionProgFill').style.width = '0%';
-        } else {
-            sHeader.style.display = 'none';
-        }
+        } else { sHeader.style.display = 'none'; }
         
         renderSidebar(); switchTab('chat');
     }
@@ -373,24 +386,11 @@
     function loadChat(id) {
         currentSessionId = id; const session = chatHistory.find(h => h.id === id);
         if(session) { currentCategory = session.category; chatLog.innerHTML = session.html; }
-        document.getElementById('sessionHeader').style.display = 'none'; // 讀取舊對話隱藏進度條
-        switchTab('chat');
+        document.getElementById('sessionHeader').style.display = 'none'; switchTab('chat');
     }
 
-    function renameChat(e, id) {
-        e.stopPropagation(); const newName = prompt("重新命名標題：");
-        if(newName) { const session = chatHistory.find(h => h.id === id); if(session) { session.title = newName; localStorage.setItem('otterHistoryProMax', JSON.stringify(chatHistory)); renderSidebar(); } }
-    }
-
-    function deleteChat(e, id) {
-        e.stopPropagation();
-        if(confirm("確定要刪除這筆紀錄嗎？刪除後將無法恢復。")) {
-            chatHistory = chatHistory.filter(h => h.id !== id);
-            localStorage.setItem('otterHistoryProMax', JSON.stringify(chatHistory));
-            if(currentSessionId === id) { currentSessionId = null; chatLog.innerHTML = ""; switchTab('dashboard'); }
-            renderSidebar();
-        }
-    }
+    function renameChat(e, id) { e.stopPropagation(); const newName = prompt("重新命名標題："); if(newName) { const s = chatHistory.find(h => h.id === id); if(s) { s.title = newName; localStorage.setItem('otterHistoryProMax', JSON.stringify(chatHistory)); renderSidebar(); } } }
+    function deleteChat(e, id) { e.stopPropagation(); if(confirm("確定刪除這筆紀錄嗎？")) { chatHistory = chatHistory.filter(h => h.id !== id); localStorage.setItem('otterHistoryProMax', JSON.stringify(chatHistory)); if(currentSessionId === id) { currentSessionId = null; chatLog.innerHTML = ""; switchTab('dashboard'); } renderSidebar(); } }
 
     function renderSidebar() {
         const renderList = (cat, containerId) => {
@@ -406,19 +406,19 @@
     function closeSidebar() { document.getElementById('sidebar').classList.remove('active'); document.getElementById('sbOverlay').classList.remove('active'); }
     function saveHistory() { if(currentSessionId) { const s = chatHistory.find(h => h.id === currentSessionId); if(s) { s.html = chatLog.innerHTML; localStorage.setItem('otterHistoryProMax', JSON.stringify(chatHistory)); } } }
 
-    // --- 啟動功能 ---
+    // --- 啟動對話與功能 ---
     function startLesson(num) { currentLessonNum = num; startChat('Path', 'Learn', currentTopic); }
     function startExplore(topicStr) { currentExploreTopic = topicStr; startChat('Explore', 'Explore', topicStr); }
     function startChat(scenario, category, specTopic = null) {
         currentScenario = scenario; currentCategory = category || 'Learn';
         if(specTopic) currentTopic = specTopic; targetPronWord = null; 
-        let title = scenario === 'Assistant' ? `AI 專家: ${currentTopic}` : (scenario === 'Path' ? `${currentTopic} (第${currentLessonNum}課)` : `${currentTopic} (${userLevel})`);
+        let title = scenario === 'Assistant' ? `AI 專家: ${currentTopic}` : (scenario === 'Path' ? `${currentTopic} (第${currentLessonNum}課 - ${userLevel})` : `${currentTopic} (${userLevel})`);
         createNewChat(currentCategory, title);
     }
 
     function startPronunciationSession() {
         currentScenario = "Pronunciation_Eval"; currentCategory = "Learn";
-        createNewChat("Learn", `發音特訓: ${currentTopic}`);
+        createNewChat("Learn", `發音特訓: ${currentTopic} (${userLevel})`);
         currentWordList = pronDB[currentTopic] ? (pronDB[currentTopic][userLevel] || pronDB['科技電腦']['Beginner']) : pronDB['科技電腦']['Beginner'];
         pronIndex = 0; loadNextPronWord();
     }
@@ -426,37 +426,25 @@
     function loadNextPronWord() {
         const wordData = currentWordList[pronIndex % currentWordList.length]; 
         targetPronWord = wordData.w;
-        chatLog.innerHTML += `
-            <div class="elsa-card">
-                <div style="color:var(--text-sub); font-size:0.8rem; margin-bottom:10px;">聽老師示範，再按麥克風跟讀：</div>
-                <div class="word">${wordData.w}</div>
-                <div class="ipa">${wordData.ipa}</div>
-            </div>
-        `;
+        chatLog.innerHTML += `<div class="elsa-card"><div style="color:var(--text-sub); font-size:0.8rem; margin-bottom:10px;">聽老師示範，再按麥克風跟讀：</div><div class="word">${wordData.w}</div><div class="ipa">${wordData.ipa}</div></div>`;
         playAudio(`/api/tts?text=${encodeURIComponent(wordData.w)}&voice=en-US-AvaNeural`);
         chatLog.scrollTop = chatLog.scrollHeight; saveHistory();
     }
 
-    // --- 音訊與錄音 ---
+    // --- 語音辨識與中斷 ---
     const recordBtn = document.getElementById('recordBtn');
-
-    function playAudio(url) {
-        if(activeAudio) { activeAudio.pause(); activeAudio.currentTime = 0; }
-        activeAudio = new Audio(url); activeAudio.play();
-    }
+    function playAudio(url) { if(activeAudio) { activeAudio.pause(); activeAudio.currentTime = 0; } activeAudio = new Audio(url); activeAudio.play(); }
 
     const startRec = async (e) => {
         e.preventDefault(); if (isRecording) return;
         if(activeAudio) { activeAudio.pause(); activeAudio = null; } 
         if(!document.getElementById('tab-chat').classList.contains('active')) switchTab('chat');
         if(!currentSessionId) createNewChat('Learn');
-
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
             mediaRecorder = new MediaRecorder(stream); audioChunks = [];
             mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-            mediaRecorder.onstop = processAudio;
-            mediaRecorder.start(); isRecording = true; recordBtn.classList.add('recording');
+            mediaRecorder.onstop = processAudio; mediaRecorder.start(); isRecording = true; recordBtn.classList.add('recording');
             document.getElementById('chatTitle').innerText = "🔴 Listening...";
         } catch (err) { alert("麥克風被拒絕"); }
     };
@@ -480,8 +468,7 @@
             const sttData = await sttRes.json();
             
             if (!sttData.text || sttData.error === "silent") { 
-                document.getElementById('chatTitle').innerText = "⚠️ 請重新發音 (未偵測到聲音)"; 
-                return; 
+                document.getElementById('chatTitle').innerText = "⚠️ 請重新發音 (未偵測到聲音)"; return; 
             }
             
             appendMsg("You", sttData.text, "user");
@@ -496,27 +483,18 @@
             
             if(currentScenario === 'Assistant') {
                 appendMsg("AI 專家", data.reply, "ai");
-            } 
-            else if (currentScenario === 'Pronunciation_Eval') {
+            } else if (currentScenario === 'Pronunciation_Eval') {
                 const pronHtml = data.feedback ? data.feedback.pron_html : data.reply;
                 const isCorrect = data.feedback ? data.feedback.is_correct : false;
                 
-                chatLog.innerHTML += `
-                    <div class="elsa-card" style="border: 2px solid ${isCorrect ? 'var(--success)' : 'var(--accent)'};">
-                        <div style="font-size:0.8rem; color:${isCorrect ? 'var(--success)' : 'var(--accent)'}; font-weight:bold;">${isCorrect ? '✅ 完美發音' : '❌ 需要調整 (紅字)'}</div>
-                        <div style="font-size:1.8rem; font-weight:bold; margin:10px 0; color:#100C20;">${pronHtml}</div>
-                        <div style="font-size:0.9rem; color:#555;">${data.reply}</div>
-                    </div>
-                `;
+                chatLog.innerHTML += `<div class="elsa-card" style="border: 2px solid ${isCorrect ? 'var(--success)' : 'var(--accent)'};"><div style="font-size:0.8rem; color:${isCorrect ? 'var(--success)' : 'var(--accent)'}; font-weight:bold;">${isCorrect ? '✅ 完美發音' : '❌ 需要調整 (紅字)'}</div><div style="font-size:1.8rem; font-weight:bold; margin:10px 0; color:#100C20;">${pronHtml}</div><div style="font-size:0.9rem; color:#555;">${data.reply}</div></div>`;
                 if(isCorrect) { 
                     userData.words[currentTopic] = Math.min((userData.words[currentTopic]||0) + 1, MAX_WORDS);
-                    pronIndex++; setTimeout(loadNextPronWord, 2500); 
+                    saveUserData(); pronIndex++; setTimeout(loadNextPronWord, 2500); 
                 }
-            }
-            else {
+            } else {
                 appendMsg("Coach", data.reply, "ai", data.translation);
                 
-                // 💡 處理課程對話進度條
                 if (currentScenario === 'Path' || currentScenario === 'Explore') {
                     sessionTurns++;
                     let pct = Math.min(100, Math.round((sessionTurns / MAX_TURNS) * 100));
@@ -528,29 +506,22 @@
                             chatLog.innerHTML += `<div class="elsa-card"><div style="color:var(--success); font-weight:bold; font-size:1.2rem;">🎉 恭喜！本堂課程已完成 100%</div></div>`;
                             chatLog.scrollTop = chatLog.scrollHeight; saveHistory();
                             
-                            if(currentScenario === 'Path') {
-                                userData.lessons[currentTopic] = Math.min(Math.max((userData.lessons[currentTopic]||0), currentLessonNum), MAX_LESSONS); 
-                            } else if (currentScenario === 'Explore') {
-                                userData.explore[currentTopic] = Math.min((userData.explore[currentTopic]||0) + 1, MAX_EXPLORE);
-                            }
+                            if(currentScenario === 'Path') { userData.lessons[currentTopic][userLevel] = Math.min(Math.max((userData.lessons[currentTopic][userLevel]||0), currentLessonNum), MAX_LESSONS); renderLessons(); } 
+                            else if (currentScenario === 'Explore') { userData.explore[currentExploreTopic][userLevel] = Math.min((userData.explore[currentExploreTopic][userLevel]||0) + 1, MAX_EXPLORE); }
                             saveUserData();
                         }, 1000);
                     }
                 }
             }
 
-            saveUserData(); 
-            if(currentScenario !== 'Pronunciation_Eval' || !data.feedback.is_correct) {
-                playAudio(`/api/tts?text=${encodeURIComponent(data.reply)}&voice=en-US-AvaNeural`);
-            }
+            if(currentScenario !== 'Pronunciation_Eval' || !data.feedback.is_correct) { playAudio(`/api/tts?text=${encodeURIComponent(data.reply)}&voice=en-US-AvaNeural`); }
             document.getElementById('chatTitle').innerText = "Ready";
             chatLog.scrollTop = chatLog.scrollHeight; saveHistory();
         } catch (e) { document.getElementById('chatTitle').innerText = "網路錯誤"; }
     }
 
     function appendMsg(s, t, c, tr = null) {
-        const d = document.createElement('div'); d.className = `bubble ${c}`;
-        d.innerHTML = `<b>${s}</b><br>${t}${tr ? `<div class="trans">${tr}</div>` : ''}`;
+        const d = document.createElement('div'); d.className = `bubble ${c}`; d.innerHTML = `<b>${s}</b><br>${t}${tr ? `<div class="trans">${tr}</div>` : ''}`;
         chatLog.appendChild(d); chatLog.scrollTop = chatLog.scrollHeight; saveHistory();
     }
 
@@ -558,37 +529,48 @@
     function saveUserData() { localStorage.setItem(currentVersion, JSON.stringify(userData)); }
     
     function updateExploreMiniStats() {
-        const getPct = (key) => {
-            let val = userData.explore[key] || 0;
-            return { val: val, pct: Math.round((val/MAX_EXPLORE)*100) };
-        };
-        let toeic = getPct('TOEIC Speaking Test');
-        let ielts = getPct('IELTS Speaking Practice');
-        let daily = getPct('Daily Survival');
-
-        document.getElementById('exp-toeic-text').innerText = `${toeic.val} / ${MAX_EXPLORE} (${toeic.pct}%)`;
-        document.getElementById('exp-toeic-fill').style.width = `${toeic.pct}%`;
-        
-        document.getElementById('exp-ielts-text').innerText = `${ielts.val} / ${MAX_EXPLORE} (${ielts.pct}%)`;
-        document.getElementById('exp-ielts-fill').style.width = `${ielts.pct}%`;
-        
-        document.getElementById('exp-daily-text').innerText = `${daily.val} / ${MAX_EXPLORE} (${daily.pct}%)`;
-        document.getElementById('exp-daily-fill').style.width = `${daily.pct}%`;
+        const getPct = (key) => { let val = userData.explore[key][userLevel] || 0; return { val: val, pct: Math.round((val/MAX_EXPLORE)*100) }; };
+        let toeic = getPct('TOEIC Speaking Test'), ielts = getPct('IELTS Speaking Practice'), daily = getPct('Daily Survival');
+        document.getElementById('exp-toeic-text').innerText = `${toeic.val} / ${MAX_EXPLORE} (${toeic.pct}%)`; document.getElementById('exp-toeic-fill').style.width = `${toeic.pct}%`;
+        document.getElementById('exp-ielts-text').innerText = `${ielts.val} / ${MAX_EXPLORE} (${ielts.pct}%)`; document.getElementById('exp-ielts-fill').style.width = `${ielts.pct}%`;
+        document.getElementById('exp-daily-text').innerText = `${daily.val} / ${MAX_EXPLORE} (${daily.pct}%)`; document.getElementById('exp-daily-fill').style.width = `${daily.pct}%`;
     }
 
     function updateProgressUI() {
-        // 確保 0% 的所有項目都能強制印出
-        const buildBars = (topicArray, dataObj, maxVal, containerId, colors) => {
-            const container = document.getElementById(containerId);
-            if(!container) return;
-            container.innerHTML = '';
+        const levels = ['Beginner', 'Intermediate', 'Advanced'];
+        const levelLabels = {'Beginner': '初級 A1', 'Intermediate': '中級 B1', 'Advanced': '高級 C1'};
+        const colors = ['#4DA2FF', '#7C4DFF', '#00E676'];
+
+        // 建立三層結構 (主分類 -> 項目 -> 初/中/高)
+        const buildNestedBars = (topicArray, dataObj, maxVal, containerId) => {
+            const container = document.getElementById(containerId); container.innerHTML = '';
+            topicArray.forEach(topic => {
+                let subHtml = '';
+                levels.forEach((lvl, idx) => {
+                    let val = dataObj[topic][lvl] || 0;
+                    let pct = Math.min(100, Math.round((val / maxVal) * 100));
+                    subHtml += `
+                        <div class="prog-row">
+                            <div class="prog-label">${levelLabels[lvl]}</div>
+                            <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width: ${pct}%; background: ${colors[idx]};"></div></div>
+                            <div class="prog-pct" style="color:${colors[idx]};">${val}/${maxVal} <span style="color:var(--text-sub);">(${pct}%)</span></div>
+                        </div>
+                    `;
+                });
+                container.innerHTML += `<div class="sub-acc-header" onclick="toggleAccordion(this)"><span>${topic}</span><span class="arrow">▼</span></div><div class="sub-acc-body">${subHtml}</div>`;
+            });
+        };
+
+        // 建立兩層結構 (主分類 -> 項目) - 用於單字
+        const buildFlatBars = (topicArray, dataObj, maxVal, containerId, clrs) => {
+            const container = document.getElementById(containerId); container.innerHTML = '';
             topicArray.forEach((topic, idx) => {
                 let val = dataObj[topic] || 0;
                 let pct = Math.min(100, Math.round((val / maxVal) * 100));
-                let color = colors[idx % colors.length];
+                let color = clrs[idx % clrs.length];
                 container.innerHTML += `
                     <div class="prog-row">
-                        <div class="prog-label" title="${topic}">${topic}</div>
+                        <div class="prog-label">${topic}</div>
                         <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width: ${pct}%; background: ${color};"></div></div>
                         <div class="prog-pct" style="color:${color};">${val}/${maxVal} <span style="color:var(--text-sub);">(${pct}%)</span></div>
                     </div>
@@ -596,12 +578,9 @@
             });
         };
 
-        const colors1 = ['#4DA2FF', '#7C4DFF', '#00E676', '#FFD700'];
-        const colors2 = ['#FF5252', '#FF4081', '#E040FB', '#7C4DFF'];
-        
-        buildBars(learnTopics, userData.lessons, MAX_LESSONS, 'prog-lessons-container', colors1);
-        buildBars(learnTopics, userData.words, MAX_WORDS, 'prog-words-container', colors2);
-        buildBars(expTopics, userData.explore, MAX_EXPLORE, 'prog-explore-container', colors1);
+        buildNestedBars(learnTopics, userData.lessons, MAX_LESSONS, 'prog-lessons-container');
+        buildNestedBars(expTopics, userData.explore, MAX_EXPLORE, 'prog-explore-container');
+        buildFlatBars(learnTopics, userData.words, MAX_WORDS, 'prog-words-container', ['#FF5252', '#FF4081', '#E040FB', '#7C4DFF']);
     }
 
     // 初始化
