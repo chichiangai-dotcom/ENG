@@ -24,6 +24,7 @@ def transcribe():
         file_content = file.read()
         if len(file_content) < 2000: 
             return jsonify({"text": "", "error": "silent"})
+
         buffer = io.BytesIO(file_content)
         buffer.name = "audio.mp3" 
         
@@ -47,7 +48,7 @@ def chat():
         level = data.get("level", "Intermediate")
         topic = data.get("topic", "General")
         target_word = data.get("target_word", "")
-        lesson_num = data.get("lesson_num", 1) # 新增：接收第幾課
+        lesson_num = data.get("lesson_num", 1)
         
         system_prompt = ""
         
@@ -67,8 +68,7 @@ def chat():
             )
         else:
             level_guide = {"Beginner": "A1/A2.", "Intermediate": "B1/B2.", "Advanced": "C1/C2."}
-            # AI 會根據「第幾課」來給出對應的課程內容
-            scenarios = {"Path": f"an English tutor teaching Lesson {lesson_num} of 10 about {topic}.", "Explore": f"an expert in {topic}."}
+            scenarios = {"Path": f"an English tutor teaching Lesson {lesson_num} of 10 about {topic}.", "Explore": f"an expert test examiner in {topic}."}
             
             system_prompt = (
                 f"You are {scenarios.get(scene, 'a friendly tutor')}. Level: {level_guide.get(level)} "
