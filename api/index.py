@@ -32,12 +32,12 @@ def transcribe():
         
         transcription = client.audio.transcriptions.create(
             file=buffer, model="whisper-large-v3", language="en", response_format="text",
-            temperature=0, prompt="Daily English conversation. Return empty if the audio is silent or just noise."
+            temperature=0, prompt="Daily English conversation. Return empty if silent or just background noise."
         )
         result = str(transcription).strip()
         
-        # 2. 徹底過濾 Whisper 的無聲幻覺 (Thank you syndrome)
-        hallucinations = ["thank you", "thanks for watching", "subtitles", "subscribe"]
+        # 2. 過濾 Whisper 幻覺 (解決沒講話卻出現 Thank you 的問題)
+        hallucinations = ["thank you", "thanks for watching", "subtitles", "subscribe", "thanks."]
         if any(h in result.lower() for h in hallucinations) and len(result) < 25:
             result = ""
             
@@ -52,43 +52,36 @@ def chat():
         scene = data.get("scenario", "General")
         level = data.get("level", "Intermediate")
         topic = data.get("topic", "General")
-        target_word = data.get("target_word", "") # 發音特訓用的目標單字
+        target_word = data.get("target_word", "")
         
-        # 根據等級調整 AI 深度
-        level_guide = {
-            "Beginner": "Use simple A1/A2 vocabulary and short sentences.",
-            "Intermediate": "Use natural B1/B2 conversational English.",
-            "Advanced": "Use C1/C2 advanced vocabulary and professional idioms."
-        }
-
-        # 針對不同場景設定 AI 大腦
         system_prompt = ""
         
         if scene == "Pronunciation_Eval":
-            # 發音特訓模式：比對用戶發音與目標單字，並標示紅字
+            # 發音特訓：嚴格比對並回傳 is_correct
             system_prompt = (
-                f"You are a strict pronunciation judge. The user tried to say the word: '{target_word}'. "
-                f"What you heard was: '{user_msg}'. "
-                "1. If they are completely correct, praise them. "
-                "2. If they are wrong, provide an HTML string highlighting the wrong parts in RED. Example: <span style='color:red; font-weight:bold;'>target_word_with_error_highlighted</span>. "
-                "Respond in JSON: {\"reply\": \"Your feedback in English\", \"translation\": \"繁體中文回饋\", \"feedback\": {\"pron_html\": \"Highlighted word or exact word if correct\"}}"
+                f"You are a strict pronunciation judge. The target word is: '{target_word}'. "
+                f"The user's speech recognition result is: '{user_msg}'. "
+                "1. Determine if the user successfully pronounced the word (allow minor STT misspellings if it sounds identical). Provide boolean 'is_correct'. "
+                "2. If incorrect, provide an HTML string highlighting the wrong parts in RED. Example: <span style='color:red; font-weight:bold;'>wrong_part</span>. "
+                "Respond in JSON: {\"reply\": \"Encouraging feedback in English\", \"translation\": \"繁體中文回饋\", \"feedback\": {\"pron_html\": \"Highlighted word or correct word\", \"is_correct\": true/false}}"
             )
         elif scene == "Assistant":
-            # 全能助理模式
+            # 自由 AI 專家：不受語言教學限制
             system_prompt = (
-                "You are a highly intelligent, omniscient AI Assistant. You can answer ANY question (coding, weather, facts, translation, etc.) freely without acting as a language teacher. "
-                "Respond directly to the user's prompt. JSON format: {\"reply\": \"Your full answer\", \"translation\": \"\"}"
+                f"You are a world-class expert in: {topic}. You are a helpful AI Assistant. "
+                "Answer the user's questions or chat about anything they want based on your expertise. "
+                "Do NOT act as an English teacher. Just be a helpful expert. "
+                "Respond entirely in Traditional Chinese unless the user asks for English. "
+                "JSON format: {\"reply\": \"Your full answer\", \"translation\": \"\"}"
             )
         else:
-            # 學習與探索模式
-            scenarios = {
-                "Path": f"an English tutor teaching {topic} at {level} level.",
-                "Explore": f"an expert guiding the user through {topic} preparation at {level} level.",
-                "General": "a friendly tutor."
-            }
+            # 學習與探索：正常語言教學
+            level_guide = {"Beginner": "A1/A2 level.", "Intermediate": "B1/B2 level.", "Advanced": "C1/C2 level."}
+            scenarios = {"Path": f"an English tutor for {topic}.", "Explore": f"an expert in {topic} test prep."}
+            
             system_prompt = (
                 f"You are {scenarios.get(scene, 'a friendly tutor')}. {level_guide.get(level)} "
-                "Respond ONLY in valid JSON format. "
+                "Respond ONLY in JSON. "
                 "JSON: {\"reply\": \"English reply\", \"translation\": \"繁體中文翻譯\", \"feedback\": {\"correction\": \"Correction if any, else null\"}}"
             )
 
