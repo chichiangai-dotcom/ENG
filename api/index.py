@@ -43,15 +43,16 @@ def chat():
         scene = data.get("scenario", "General")
         level = data.get("level", "Intermediate")
         ui_lang = data.get("uiLang", "zh") 
-        goal = data.get("goal", "improve English")
-        interests = data.get("interests", "general topics")
+        topic = data.get("topic", "日常閒聊") # 接收前端選取的主題或職業
         
+        # 定義多種動態情境
         scenarios = {
-            "Travel": "a friendly hotel receptionist.",
-            "Restaurant": "a waiter.",
-            "Interview": "an HR Manager.",
-            "Pronunciation": "a strict pronunciation coach.",
-            "Path": f"an AI English coach helping the user achieve their goal of '{goal}' by discussing '{interests}'.",
+            "Travel": "a friendly hotel receptionist or customs officer.",
+            "Restaurant": "a waiter taking orders at a nice restaurant.",
+            "Interview": "an HR Manager conducting a job interview.",
+            "Pronunciation": f"a strict pronunciation coach. The topic is {topic}. Give a short sentence related to this topic for the user to read.",
+            "Path": f"an AI English coach helping the user learn about the specific topic: {topic}. Ask relevant questions to guide them.",
+            "Explore": f"an expert examiner or tutor focusing strictly on: {topic}.",
             "General": "a friendly tutor for free conversation."
         }
         
