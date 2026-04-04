@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AI Otter Coach Pro - Master Mobile Edition</title>
+    <title>AI Otter Coach Pro - Precision Audio</title>
     <style>
         :root { 
             --bg-dark: #121026; --bg-card: #1E1C3A; --primary: #00D2FF; 
@@ -11,201 +11,103 @@
             --accent: #FFD700; --otter-brown: #744A32; --otter-face: #F1D4B6;
         }
         * { -webkit-tap-highlight-color: transparent; user-select: none; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); margin: 0; display: flex; justify-content: center; height: 100dvh; overflow: hidden; }
+        .app-shell { width: 100%; max-width: 480px; height: 100%; display: flex; flex-direction: column; position: relative; background: radial-gradient(circle at top, #231d49 0%, var(--bg-dark) 80%); padding-bottom: env(safe-area-inset-bottom); }
         
-        /* 核心自適應高度修正：使用 dvh 解決手機工具列切掉問題 */
-        body { 
-            font-family: 'Inter', sans-serif; 
-            background: var(--bg-dark); 
-            color: var(--text-main); 
-            margin: 0; 
-            display: flex; 
-            justify-content: center; 
-            height: 100vh; /* 備用 */
-            height: 100dvh; /* 動態視窗高度 */
-            overflow: hidden; 
-        }
-        
-        .app-shell { 
-            width: 100%; max-width: 480px; height: 100%; display: flex; flex-direction: column; 
-            position: relative; 
-            background: radial-gradient(circle at top, #231d49 0%, var(--bg-dark) 80%);
-            padding-bottom: env(safe-area-inset-bottom); /* 適應 iPhone 底部橫條 */
-        }
-        
-        .top-bar { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
-        .streak { display: flex; gap: 15px; font-weight: bold; font-size: 0.85rem; }
-
-        /* 海獺動畫 (保持原樣不刪減) */
+        .top-bar { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; }
         .otter-container { display: flex; justify-content: center; margin: 10px 0; }
-        .otter { position: relative; width: 130px; height: 150px; animation: float 4s ease-in-out infinite; cursor: pointer; }
+        .otter { position: relative; width: 130px; height: 150px; animation: float 4s ease-in-out infinite; }
         .otter-body { width: 110px; height: 130px; background: var(--otter-brown); border-radius: 55px 55px 30px 30px; position: absolute; left: 10px; top: 10px; }
         .otter-head { width: 90px; height: 80px; background: var(--otter-brown); border-radius: 45px; position: absolute; left: 20px; top: 0px; }
         .otter-face { width: 65px; height: 48px; background: var(--otter-face); border-radius: 30px; position: absolute; left: 13px; top: 25px; z-index: 2; }
         .otter-face::before, .otter-face::after { content: ''; width: 8px; height: 8px; background: #333; border-radius: 50%; position: absolute; top: 10px; }
         .otter-face::before { left: 13px; } .otter-face::after { right: 13px; }
-        .otter-nose { width: 10px; height: 7px; background: #000; border-radius: 50%; position: absolute; left: 27px; top: 23px; }
-        .otter-muzzle { width: 18px; height: 14px; background: #E6CBB1; border-radius: 50%; position: absolute; left: 23px; top: 26px; }
-        .otter-ear { width: 18px; height: 18px; background: var(--otter-brown); border-radius: 50%; position: absolute; top: 5px; }
-        .otter-ear.left { left: 15px; } .otter-ear.right { right: 15px; }
-        .otter-hand { width: 22px; height: 32px; background: var(--otter-brown); border-radius: 10px; position: absolute; z-index: 3; top: 85px; }
-        .otter-hand.left { left: 15px; transform: rotate(15deg); } .otter-hand.right { right: 15px; transform: rotate(-15deg); }
         .otter-shell { width: 32px; height: 28px; background: var(--accent); border-radius: 50%; position: absolute; left: 49px; top: 90px; z-index: 4; box-shadow: 0 0 12px var(--accent); display: flex; justify-content: center; align-items: center; font-size: 1rem; color: #333; font-weight: bold; }
-        .otter-foot { width: 22px; height: 28px; background: var(--otter-brown); border-radius: 10px; position: absolute; bottom: 0; z-index: 1; }
-        .otter-foot.left { left: 30px; transform: rotate(-10deg); } .otter-foot.right { right: 30px; transform: rotate(10deg); }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-        /* 視窗與導覽優化 */
-        .screen { flex: 1; overflow-y: auto; display: none; flex-direction: column; padding: 0 20px; padding-bottom: 110px; -webkit-overflow-scrolling: touch; }
+        .screen { flex: 1; overflow-y: auto; display: none; flex-direction: column; padding: 0 20px; padding-bottom: 110px; }
         .screen.active { display: flex; }
-        .screen::-webkit-scrollbar { display: none; }
-
-        .greeting { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 15px; margin-bottom: 15px; backdrop-filter: blur(10px); }
-        .grid-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .btn-menu { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; color: white; display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; text-align: center; font-size: 0.85rem; }
+        .btn-menu { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 15px; color: white; display: flex; flex-direction: column; align-items: center; cursor: pointer; text-align: center; }
         
-        .path-step { background: var(--bg-card); padding: 12px; border-radius: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 15px; border-left: 4px solid var(--primary); }
-
         .bubble { max-width: 85%; padding: 12px 16px; border-radius: 18px; margin-bottom: 12px; line-height: 1.4; font-size: 0.9rem; }
-        .user { align-self: flex-end; background: linear-gradient(135deg, var(--secondary), var(--primary)); color: white; border-bottom-right-radius: 2px; }
-        .ai { align-self: flex-start; background: var(--bg-card); color: white; border-bottom-left-radius: 2px; border: 1px solid rgba(255,255,255,0.05); }
-        .trans { font-size: 0.75rem; color: var(--text-sub); margin-top: 5px; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.1); }
-        
-        .elsa-card { background: white; color: #333; border-radius: 12px; padding: 12px; margin-top: 5px; width: 100%; }
-        .elsa-card .word { font-size: 1.3rem; font-weight: 800; color: #2C3A47; }
+        .user { align-self: flex-end; background: linear-gradient(135deg, var(--secondary), var(--primary)); }
+        .ai { align-self: flex-start; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.05); }
+        .trans { font-size: 0.75rem; color: var(--text-sub); margin-top: 5px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 5px; }
 
-        /* 底部導覽列修正：加入 padding-bottom 以應對 Safe Area */
-        .bottom-nav { 
-            position: absolute; bottom: 0; width: 100%; 
-            background: rgba(18, 16, 38, 0.98); backdrop-filter: blur(15px); 
-            display: flex; justify-content: space-around; align-items: center; 
-            border-top: 1px solid rgba(255,255,255,0.05); 
-            height: 85px; 
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-        .nav-item { color: var(--text-sub); display: flex; flex-direction: column; align-items: center; font-size: 0.7rem; gap: 4px; width: 55px; }
+        .bottom-nav { position: absolute; bottom: 0; width: 100%; background: rgba(18, 16, 38, 0.98); display: flex; justify-content: space-around; align-items: center; height: 85px; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid rgba(255,255,255,0.05); }
+        .nav-item { color: var(--text-sub); display: flex; flex-direction: column; align-items: center; font-size: 0.7rem; gap: 4px; }
         .nav-item.active { color: var(--primary); }
         .record-wrap { position: relative; width: 70px; height: 70px; }
-        .record-btn { 
-            width: 60px; height: 60px; border-radius: 50%; 
-            background: linear-gradient(135deg, var(--primary), var(--secondary)); 
-            display: flex; justify-content: center; align-items: center; 
-            font-size: 1.5rem; border: none; cursor: pointer; 
-            position: absolute; top: -25px; 
-            box-shadow: 0 5px 20px rgba(0, 210, 255, 0.4); 
-            touch-action: none;
-        }
-        .record-btn.recording { background: #FF4757; transform: scale(1.1); box-shadow: 0 0 20px #FF4757; }
+        .record-btn { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; justify-content: center; align-items: center; font-size: 1.5rem; border: none; position: absolute; top: -25px; box-shadow: 0 5px 20px rgba(0, 210, 255, 0.4); touch-action: none; }
+        .record-btn.recording { background: #FF4757; animation: pulse 1s infinite; transform: scale(1.1); }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(255, 71, 87, 0); } 100% { box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); } }
         
-        select { background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 10px; border-radius: 10px; width: 100%; margin-bottom: 12px; outline: none; font-size: 0.9rem; }
+        .elsa-card { background: white; color: #333; border-radius: 12px; padding: 12px; margin-top: 5px; }
     </style>
 </head>
 <body>
 
 <div class="app-shell">
     <div class="top-bar">
-        <div style="font-size: 1.2rem; cursor: pointer;" onclick="nav('settings')">⚙️</div>
-        <div class="streak"><span style="color:#FF9F43">🔥 1</span><span style="color:#9B59B6">💎 0</span></div>
+        <div onclick="nav('settings')">⚙️</div>
+        <div class="streak">🔥 1 💎 0</div>
     </div>
 
     <div id="home" class="screen active">
-        <div class="otter-container">
-            <div class="otter" onclick="appendUserMsg('Poke Otter!');">
-                <div class="otter-ear left"></div><div class="otter-ear right"></div>
-                <div class="otter-body"></div>
-                <div class="otter-head"><div class="otter-face"></div></div>
-                <div class="otter-hand left"></div><div class="otter-hand right"></div>
-                <div class="otter-shell">貝</div>
-                <div class="otter-foot left"></div><div class="otter-foot right"></div>
-            </div>
-        </div>
-        <div class="greeting">
-            <h3 style="margin: 0 0 5px 0;" data-i18n="hello">海獺老師來啦！</h3>
-            <p style="color: var(--text-sub); font-size: 0.85rem;" data-i18n="hello_sub">選一個情境，讓海獺聽聽你的英文</p>
-        </div>
+        <div class="otter-container"><div class="otter"><div class="otter-body"></div><div class="otter-head"><div class="otter-face"></div></div><div class="otter-shell">貝</div></div></div>
+        <div class="greeting"><h3>海獺教練正在聆聽...</h3><p>選擇一個主題，我們開始練習！</p></div>
         <div class="grid-menu">
-            <div class="btn-menu" onclick="startScenario('Travel')"><span data-i18n="menu_travel">✈️ 旅遊</span></div>
-            <div class="btn-menu" onclick="startScenario('Restaurant')"><span data-i18n="menu_food">🍔 點餐</span></div>
-            <div class="btn-menu" onclick="startScenario('Interview')"><span data-i18n="menu_job">💼 面試</span></div>
-            <div class="btn-menu" onclick="startScenario('Pronunciation')"><span data-i18n="menu_pron">🗣️ 糾音</span></div>
-        </div>
-    </div>
-
-    <div id="path" class="screen">
-        <div class="path-title"><span data-i18n="path_title">🏃 每日生活美語</span></div>
-        <div class="path-step" onclick="startScenario('General')">
-            <div class="path-icon">💬</div>
-            <div>
-                <div style="font-weight: bold; font-size: 0.9rem;">Free Talk</div>
-                <div style="font-size: 0.75rem; color: var(--text-sub);">自由閒聊</div>
-            </div>
-        </div>
-        <div class="path-step" onclick="startScenario('Pronunciation')">
-            <div class="path-icon" style="background:rgba(0, 210, 255, 0.2); color:var(--primary);">🎤</div>
-            <div>
-                <div style="font-weight: bold; font-size: 0.9rem;">Pronunciation</div>
-                <div style="font-size: 0.75rem; color: var(--primary);">已解鎖！點擊開始</div>
-            </div>
+            <div class="btn-menu" onclick="startScenario('Travel')">✈️ 旅遊通關</div>
+            <div class="btn-menu" onclick="startScenario('Interview')">💼 職涯面試</div>
         </div>
     </div>
 
     <div id="chat" class="screen">
-        <div style="text-align: center; color: var(--text-sub); font-size: 0.75rem; margin: 10px 0;" id="chatTitle">Ready</div>
+        <div style="text-align: center; color: var(--text-sub); font-size: 0.75rem; margin: 10px 0;" id="chatTitle">Status: Ready</div>
         <div id="chatLog" style="display: flex; flex-direction: column;"></div>
     </div>
 
     <div id="settings" class="screen">
-        <h3 data-i18n="set_title">設定</h3>
-        <select id="uiLang" onchange="changeLang()"><option value="zh">繁體中文</option><option value="en">English</option></select>
-        <select id="userLevel"><option value="Beginner">A1 Beginner</option><option value="Intermediate" selected>B1 Intermediate</option><option value="Advanced">C1 Advanced</option></select>
-        <select id="aiVoice">
-            <option value="en-US-AvaNeural">🇺🇸 美國 女聲</option>
-            <option value="en-GB-SoniaNeural">🇬🇧 英國 女聲</option>
-            <option value="en-AU-NatashaNeural">🇦🇺 澳洲 女聲</option>
-        </select>
-        <div class="btn-menu" style="background: var(--primary);" onclick="nav('home')">儲存返回</div>
+        <h3>Settings</h3>
+        <select id="uiLang"><option value="zh">繁體中文</option><option value="en">English</option></select>
+        <select id="aiVoice"><option value="en-US-AvaNeural">🇺🇸 US Female</option><option value="en-GB-SoniaNeural">🇬🇧 UK Female</option></select>
+        <div class="btn-menu" style="background: var(--primary);" onclick="nav('home')">Save</div>
     </div>
 
     <div class="bottom-nav">
-        <div class="nav-item active" onclick="nav('home')">🏠<span data-i18n="nav_home">首頁</span></div>
-        <div class="nav-item" onclick="nav('path')">📚<span data-i18n="nav_path">課程</span></div>
+        <div class="nav-item active" onclick="nav('home')">🏠<span>首頁</span></div>
         <div class="record-wrap"><button id="recordBtn" class="record-btn">🎙️</button></div>
-        <div class="nav-item" onclick="nav('chat')">💬<span data-i18n="nav_chat">對話</span></div>
-        <div class="nav-item" onclick="nav('settings')">👤<span data-i18n="nav_me">我的</span></div>
+        <div class="nav-item" onclick="nav('chat')">💬<span>對話</span></div>
     </div>
 </div>
 
 <script>
-    const dict = {
-        'zh': { 'hello': '海獺老師來啦！', 'hello_sub': '選一個情境，讓海獺聽聽你的英文', 'menu_travel':'✈️ 旅遊', 'menu_food':'🍔 點餐', 'menu_job':'💼 面試', 'menu_pron':'🗣️ 糾音', 'nav_home':'首頁', 'nav_path':'課程', 'nav_chat':'對話', 'nav_me':'我的', 'set_title':'設定' },
-        'en': { 'hello': 'Otter is here!', 'hello_sub': 'Pick a scene and speak to Otter', 'menu_travel':'✈️ Travel', 'menu_food':'🍔 Restaurant', 'menu_job':'💼 Job', 'menu_pron':'🗣️ Pronun', 'nav_home':'Home', 'nav_path':'Course', 'nav_chat':'Chat', 'nav_me':'Me', 'set_title':'Settings' }
-    };
-
     let mediaRecorder, audioChunks = [], currentScenario = "General", isRecording = false;
     const recordBtn = document.getElementById('recordBtn'), chatLog = document.getElementById('chatLog');
 
     function nav(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-    }
-
-    function changeLang() {
-        const l = document.getElementById('uiLang').value;
-        document.querySelectorAll('[data-i18n]').forEach(el => {
-            const k = el.getAttribute('data-i18n');
-            if(dict[l][k]) el.innerText = dict[l][k];
-        });
     }
 
     function startScenario(s) {
         currentScenario = s; nav('chat');
-        chatLog.innerHTML = `<div class="bubble ai"><b>Coach</b><br>Let's practice ${s}! Hold and speak.</div>`;
+        chatLog.innerHTML = `<div class="bubble ai"><b>Coach</b><br>Welcome to ${s} practice! I'm listening.</div>`;
     }
 
+    // --- 強化版錄音設置 ---
     const startRec = async (e) => {
         e.preventDefault(); if (isRecording) return;
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            // 加入雜音抑制與自動增益
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: { 
+                    echoCancellation: true, 
+                    noiseSuppression: true, 
+                    autoGainControl: true,
+                    sampleRate: 48000
+                } 
+            });
             mediaRecorder = new MediaRecorder(stream);
             audioChunks = [];
             mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
@@ -213,8 +115,8 @@
             mediaRecorder.start();
             isRecording = true;
             recordBtn.classList.add('recording');
-            if(window.navigator.vibrate) window.navigator.vibrate(40);
-        } catch (err) { alert("Mic error"); }
+            document.getElementById('chatTitle').innerText = "🔴 Recording (Speak clearly)...";
+        } catch (err) { alert("Mic Error"); }
     };
 
     const stopRec = (e) => {
@@ -233,42 +135,37 @@
     recordBtn.addEventListener('touchend', stopRec, {passive: false});
 
     async function processAudio() {
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        document.getElementById('chatTitle').innerText = "⏳ Processing Audio...";
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
         const formData = new FormData();
-        formData.append('file', audioBlob, 'audio.webm');
+        formData.append('file', audioBlob, 'audio.wav');
+
         try {
             const sttRes = await fetch('/api/transcribe', { method: 'POST', body: formData });
             const sttData = await sttRes.json();
-            if (!sttData.text) return;
+            if (!sttData.text) { document.getElementById('chatTitle').innerText = "Try speaking closer to mic"; return; }
+            
             appendMsg("You", sttData.text, "user");
 
             const res = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: sttData.text, scenario: currentScenario, level: document.getElementById('userLevel').value, uiLang: document.getElementById('uiLang').value })
+                body: JSON.stringify({ message: sttData.text, scenario: currentScenario, uiLang: document.getElementById('uiLang').value })
             });
             const data = await res.json();
             appendMsg("Coach", data.reply, "ai", data.translation);
 
-            if (data.feedback && data.feedback.pronunciation) {
-                const c = document.createElement('div'); c.className = "elsa-card";
-                c.innerHTML = `<div class="word">${data.feedback.pronunciation.word}</div><div style="color:var(--primary); font-family:monospace;">${data.feedback.pronunciation.ipa}</div><small>${data.feedback.pronunciation.tip}</small>`;
-                chatLog.appendChild(c);
-            }
-
             new Audio(`/api/tts?text=${encodeURIComponent(data.reply)}&voice=${document.getElementById('aiVoice').value}`).play();
+            document.getElementById('chatTitle').innerText = "Ready";
             chatLog.scrollTop = chatLog.scrollHeight;
-        } catch (e) { console.error(e); }
+        } catch (e) { document.getElementById('chatTitle').innerText = "Error"; }
     }
 
     function appendMsg(s, t, c, tr) {
         const d = document.createElement('div'); d.className = `bubble ${c}`;
         d.innerHTML = `<b>${s}</b><br>${t}${tr ? `<div class="trans">${tr}</div>` : ''}`;
-        chatLog.appendChild(d);
-        chatLog.scrollTop = chatLog.scrollHeight;
+        chatLog.appendChild(d); chatLog.scrollTop = chatLog.scrollHeight;
     }
-
-    changeLang();
 </script>
 </body>
 </html>
