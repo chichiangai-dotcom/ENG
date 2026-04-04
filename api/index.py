@@ -30,7 +30,7 @@ def transcribe():
             language="en", 
             response_format="text",
             temperature=0,
-            prompt="This is an English learning session. The user is practicing spoken English conversation. Correct pronunciation errors into proper words."
+            prompt="This is an English learning session. Correct pronunciation errors into proper English words."
         )
         return jsonify({"text": str(transcription).strip()})
     except: return jsonify({"error": "STT Failed"}), 500
@@ -43,14 +43,15 @@ def chat():
         scene = data.get("scenario", "General")
         level = data.get("level", "Intermediate")
         ui_lang = data.get("uiLang", "zh") 
-        # 接收新的客製化參數
         goal = data.get("goal", "improve English")
         interests = data.get("interests", "general topics")
         
         scenarios = {
-            "Path": f"an AI English coach helping the user achieve their goal of '{goal}' by discussing their interests in '{interests}'.",
-            "Pronunciation": "a strict pronunciation coach asking the user to repeat specific words related to their interests.",
-            "Vocabulary": f"a vocabulary tutor introducing new words related to '{interests}'.",
+            "Travel": "a friendly hotel receptionist.",
+            "Restaurant": "a waiter.",
+            "Interview": "an HR Manager.",
+            "Pronunciation": "a strict pronunciation coach.",
+            "Path": f"an AI English coach helping the user achieve their goal of '{goal}' by discussing '{interests}'.",
             "General": "a friendly tutor for free conversation."
         }
         
