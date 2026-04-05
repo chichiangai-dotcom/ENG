@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AI Coach Pro - Deep Progression</title>
+    <title>AI Coach Pro - Flawless Flow</title>
     <style>
         :root { 
             --bg-dark: #100C20; --bg-card: #23203B; --primary: #4DA2FF; 
@@ -14,7 +14,7 @@
         body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-main); display: flex; justify-content: center; height: 100dvh; overflow: hidden; }
         .app-shell { width: 100%; max-width: 480px; height: 100%; display: flex; flex-direction: column; position: relative; background: linear-gradient(180deg, #1C1836 0%, var(--bg-dark) 100%); padding-bottom: env(safe-area-inset-bottom); overflow: hidden; }
 
-        /* 側邊欄與通用組件 */
+        /* 側邊欄 */
         .sidebar { position: absolute; top: 0; left: 0; width: 280px; height: 100%; background: #16122B; z-index: 999; transform: translateX(-100%); transition: 0.3s; display: flex; flex-direction: column; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
         .sidebar.active { transform: translateX(0); }
         .sb-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 998; display: none; }
@@ -27,16 +27,19 @@
         .action-btns { display: flex; gap: 10px; }
         .action-btn { padding: 5px; font-size: 0.9rem; cursor: pointer; }
 
+        /* 通用組件 */
         .screen { flex: 1; overflow-y: auto; display: none; flex-direction: column; padding: 0 20px; padding-bottom: 110px; -webkit-overflow-scrolling: touch; }
         .screen.active { display: flex; animation: fadeIn 0.3s ease; }
         .screen::-webkit-scrollbar { display: none; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
         .top-nav { padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 10; }
         .icon-btn { font-size: 1.5rem; cursor: pointer; color: white; padding: 5px; }
         
+        /* 🔥 修正：明顯的選取框 */
         .level-selector { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 12px; display: flex; margin-bottom: 15px; }
-        .lvl-btn { flex: 1; text-align: center; padding: 8px; border-radius: 8px; font-size: 0.85rem; color: var(--text-sub); cursor: pointer; transition: 0.2s; }
-        .lvl-btn.active { background: var(--secondary); color: white; font-weight: bold; }
+        .lvl-btn { flex: 1; text-align: center; padding: 8px; border-radius: 8px; font-size: 0.85rem; color: var(--text-sub); cursor: pointer; transition: 0.2s; border: 2px solid transparent; }
+        .lvl-btn.active { background: rgba(77, 162, 255, 0.2); color: white; font-weight: bold; border-color: var(--primary); box-shadow: 0 2px 10px rgba(77, 162, 255, 0.2); }
 
         .topic-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin: 0 -20px 5px -20px; padding-left: 20px; padding-right: 20px; }
         .topic-scroll::-webkit-scrollbar { display: none; }
@@ -56,10 +59,9 @@
         .chat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
         .chat-opt { background: var(--bg-card); padding: 20px 15px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
 
-        /* 🔥 折疊選單專屬樣式 (Accordions) */
+        /* 折疊選單 (Accordions) */
         .acc-item { margin-bottom: 15px; }
         .acc-header { padding: 18px 20px; display: flex; justify-content: space-between; cursor: pointer; background: var(--bg-card); border-radius: 12px; font-weight: bold; border: 1px solid rgba(255,255,255,0.05); align-items: center;}
-        .acc-header:active { background: var(--bg-card-hover); }
         .acc-header .arrow { transition: transform 0.3s ease; color: var(--primary); }
         .acc-header.open .arrow { transform: rotate(180deg); }
         .acc-body { display: none; padding: 10px 5px; animation: fadeIn 0.2s ease; }
@@ -68,14 +70,14 @@
         .sub-acc-header.open .arrow { transform: rotate(180deg); color: var(--primary); }
         .sub-acc-body { display: none; padding: 15px; background: rgba(0,0,0,0.1); border-radius: 0 0 8px 8px; margin-top: -5px; margin-bottom: 10px;}
 
-        /* 進度條列 */
+        /* 進度條 */
         .prog-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
         .prog-label { width: 70px; font-size: 0.8rem; color: var(--text-main); font-weight: 500;}
         .prog-bar-wrap { flex: 1; height: 10px; background: rgba(255,255,255,0.05); border-radius: 5px; overflow: hidden; }
         .prog-bar-fill { height: 100%; border-radius: 5px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
         .prog-pct { width: 85px; text-align: right; font-size: 0.75rem; font-family: monospace; color: var(--text-sub);}
 
-        /* 聊天與發音卡片 */
+        /* 聊天與卡片 */
         .bubble { max-width: 85%; padding: 12px 16px; border-radius: 18px; margin-bottom: 12px; line-height: 1.4; font-size: 0.9rem; word-wrap: break-word; }
         .user { align-self: flex-end; background: linear-gradient(135deg, var(--secondary), var(--primary)); }
         .ai { align-self: flex-start; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.05); }
@@ -89,7 +91,17 @@
         .session-prog-wrap { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
         .session-prog-fill { height: 100%; width: 0%; background: var(--success); transition: width 0.5s; }
 
-        /* 底部導覽列 */
+        /* 海獺 */
+        .otter-container { display: flex; justify-content: center; margin: 10px 0; }
+        .otter { position: relative; width: 100px; height: 110px; animation: float 4s ease-in-out infinite; transform: scale(1.1); margin-top: 10px; }
+        .otter-body { width: 80px; height: 90px; background: var(--otter-brown); border-radius: 40px 40px 20px 20px; position: absolute; left: 10px; top: 10px; }
+        .otter-head { width: 70px; height: 60px; background: var(--otter-brown); border-radius: 35px; position: absolute; left: 15px; top: 0px; }
+        .otter-face { width: 50px; height: 35px; background: var(--otter-face); border-radius: 20px; position: absolute; left: 10px; top: 20px; z-index: 2; }
+        .otter-face::before, .otter-face::after { content: ''; width: 6px; height: 6px; background: #333; border-radius: 50%; position: absolute; top: 8px; }
+        .otter-face::before { left: 10px; } .otter-face::after { right: 10px; }
+        .otter-shell { width: 25px; height: 20px; background: var(--primary); border-radius: 50%; position: absolute; left: 37px; top: 65px; z-index: 4; box-shadow: 0 0 15px var(--primary); display: flex; justify-content: center; align-items: center; font-size: 0.7rem; font-weight: bold; }
+
+        /* 底部導覽 */
         .bottom-nav { position: absolute; bottom: 0; width: 100%; background: rgba(16, 12, 32, 0.98); display: flex; justify-content: space-around; align-items: center; height: 80px; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid rgba(255,255,255,0.05); z-index: 100; transition: transform 0.3s; }
         .nav-item { color: var(--text-sub); display: flex; flex-direction: column; align-items: center; font-size: 0.65rem; gap: 4px; cursor: pointer; flex: 1; }
         .nav-item.active { color: white; font-weight: bold; }
@@ -120,9 +132,9 @@
 
     <div id="tab-dashboard" class="screen active">
         <div class="level-selector">
-            <div class="lvl-btn" onclick="setLevel('Beginner')">A1 初級</div>
-            <div class="lvl-btn active" onclick="setLevel('Intermediate')">B1 中級</div>
-            <div class="lvl-btn" onclick="setLevel('Advanced')">C1 高級</div>
+            <div class="lvl-btn" data-lvl="Beginner" onclick="setLevel('Beginner')">A1 初級</div>
+            <div class="lvl-btn active" data-lvl="Intermediate" onclick="setLevel('Intermediate')">B1 中級</div>
+            <div class="lvl-btn" data-lvl="Advanced" onclick="setLevel('Advanced')">C1 高級</div>
         </div>
         <div class="topic-scroll">
             <div class="topic-pill active" onclick="setTopic('科技電腦')">💻 科技</div>
@@ -157,9 +169,9 @@
 
     <div id="tab-explore" class="screen">
         <div class="level-selector">
-            <div class="lvl-btn" onclick="setLevel('Beginner')">A1 基礎</div>
-            <div class="lvl-btn active" onclick="setLevel('Intermediate')">B1 實戰</div>
-            <div class="lvl-btn" onclick="setLevel('Advanced')">C1 高分</div>
+            <div class="lvl-btn" data-lvl="Beginner" onclick="setLevel('Beginner')">A1 基礎</div>
+            <div class="lvl-btn active" data-lvl="Intermediate" onclick="setLevel('Intermediate')">B1 實戰</div>
+            <div class="lvl-btn" data-lvl="Advanced" onclick="setLevel('Advanced')">C1 高分</div>
         </div>
         <h2 style="margin-top:0;">探索考題與生活</h2>
         <div class="path-box">
@@ -213,23 +225,17 @@
         <h2 style="margin-top:0; margin-bottom: 20px;">全方位學習進度</h2>
         
         <div class="acc-item">
-            <div class="acc-header" onclick="toggleAccordion(this)">
-                <span>📚 課程完成度 (10課/級)</span><span class="arrow">▼</span>
-            </div>
+            <div class="acc-header" onclick="toggleAccordion(this)"><span>📚 課程完成度 (10課/級)</span><span class="arrow">▼</span></div>
             <div class="acc-body" id="prog-lessons-container"></div>
         </div>
 
         <div class="acc-item">
-            <div class="acc-header" onclick="toggleAccordion(this)">
-                <span>🧭 探索特訓單元 (20回/級)</span><span class="arrow">▼</span>
-            </div>
+            <div class="acc-header" onclick="toggleAccordion(this)"><span>🧭 探索特訓單元 (20回/級)</span><span class="arrow">▼</span></div>
             <div class="acc-body" id="prog-explore-container"></div>
         </div>
 
         <div class="acc-item">
-            <div class="acc-header" onclick="toggleAccordion(this)">
-                <span>📖 單字與發音掌握 (2000字/類)</span><span class="arrow">▼</span>
-            </div>
+            <div class="acc-header" onclick="toggleAccordion(this)"><span>📖 單字與發音掌握 (2000字/類)</span><span class="arrow">▼</span></div>
             <div class="acc-body" id="prog-words-container" style="background:var(--bg-card); padding:15px; border-radius:10px;"></div>
         </div>
     </div>
@@ -254,33 +260,42 @@
 </div>
 
 <script>
-    // --- 嚴謹的進度資料庫 (三維度結構 V6) ---
+    // --- 進度結構 V6 ---
     const MAX_LESSONS = 10, MAX_WORDS = 2000, MAX_EXPLORE = 20;
     const learnTopics = ['科技電腦', '商務職場', '旅遊通關', '日常社交'];
     const expTopics = ['TOEIC Speaking Test', 'IELTS Speaking Practice', 'Daily Survival'];
     
     const currentVersion = "otterProgressV6"; 
     let userData = JSON.parse(localStorage.getItem(currentVersion));
-    
-    // 初始化或遷移結構
     if (!userData || typeof userData.lessons['科技電腦'] !== 'object') {
         userData = { lessons: {}, words: {}, explore: {} };
-        learnTopics.forEach(t => { 
-            userData.lessons[t] = { 'Beginner': 0, 'Intermediate': 0, 'Advanced': 0 }; 
-            userData.words[t] = 0; // 單字以總數計
-        });
-        expTopics.forEach(t => { 
-            userData.explore[t] = { 'Beginner': 0, 'Intermediate': 0, 'Advanced': 0 }; 
-        });
+        learnTopics.forEach(t => { userData.lessons[t] = {'Beginner':0, 'Intermediate':0, 'Advanced':0}; userData.words[t] = 0; });
+        expTopics.forEach(t => { userData.explore[t] = {'Beginner':0, 'Intermediate':0, 'Advanced':0}; });
         localStorage.setItem(currentVersion, JSON.stringify(userData));
     }
 
-    // 發音庫
+    // 發音庫 (擴充模擬)
     const pronDB = {
-        '科技電腦': { 'Beginner': [{w:'Mouse', ipa:'/maʊs/'}], 'Intermediate': [{w:'Database', ipa:'/ˈdeɪ.tə.beɪs/'}], 'Advanced': [{w:'Architecture', ipa:'/ˈɑːr.kə.tek.tʃɚ/'}] },
-        '商務職場': { 'Beginner': [{w:'Meeting', ipa:'/ˈmiː.t̬ɪŋ/'}], 'Intermediate': [{w:'Negotiation', ipa:'/nəˌɡoʊ.ʃiˈeɪ.ʃən/'}], 'Advanced': [{w:'Acquisition', ipa:'/ˌæk.wəˈzɪʃ.ən/'}] },
-        '旅遊通關': { 'Beginner': [{w:'Ticket', ipa:'/ˈtɪk.ɪt/'}], 'Intermediate': [{w:'Itinerary', ipa:'/aɪˈtɪn.ə.rer.i/'}], 'Advanced': [{w:'Customs', ipa:'/ˈkʌs.təmz/'}] },
-        '日常社交': { 'Beginner': [{w:'Friend', ipa:'/frend/'}], 'Intermediate': [{w:'Groceries', ipa:'/ˈɡroʊ.sɚ.iz/'}], 'Advanced': [{w:'Acquaintance', ipa:'/əˈkweɪn.təns/'}] }
+        '科技電腦': { 
+            'Beginner': [{w:'Mouse', ipa:'/maʊs/'}, {w:'Screen', ipa:'/skriːn/'}, {w:'Keyboard', ipa:'/ˈkiː.bɔːrd/'}], 
+            'Intermediate': [{w:'Database', ipa:'/ˈdeɪ.tə.beɪs/'}, {w:'Algorithm', ipa:'/ˈæl.ɡə.rɪ.ðəm/'}, {w:'Software', ipa:'/ˈsɑːft.wer/'}], 
+            'Advanced': [{w:'Architecture', ipa:'/ˈɑːr.kə.tek.tʃɚ/'}, {w:'Cryptography', ipa:'/krɪpˈtɑː.ɡrə.fi/'}] 
+        },
+        '商務職場': { 
+            'Beginner': [{w:'Meeting', ipa:'/ˈmiː.t̬ɪŋ/'}, {w:'Office', ipa:'/ˈɑː.fɪs/'}], 
+            'Intermediate': [{w:'Negotiation', ipa:'/nəˌɡoʊ.ʃiˈeɪ.ʃən/'}, {w:'Proposal', ipa:'/prəˈpoʊ.zəl/'}], 
+            'Advanced': [{w:'Acquisition', ipa:'/ˌæk.wəˈzɪʃ.ən/'}, {w:'Entrepreneurship', ipa:'/ˌɑːn.trə.prəˈnɝː.ʃɪp/'}] 
+        },
+        '旅遊通關': { 
+            'Beginner': [{w:'Ticket', ipa:'/ˈtɪk.ɪt/'}, {w:'Airport', ipa:'/ˈer.pɔːrt/'}], 
+            'Intermediate': [{w:'Itinerary', ipa:'/aɪˈtɪn.ə.rer.i/'}, {w:'Baggage', ipa:'/ˈbæɡ.ɪdʒ/'}], 
+            'Advanced': [{w:'Customs', ipa:'/ˈkʌs.təmz/'}, {w:'Quarantine', ipa:'/ˈkwɔːr.ən.tiːn/'}] 
+        },
+        '日常社交': { 
+            'Beginner': [{w:'Friend', ipa:'/frend/'}, {w:'Family', ipa:'/ˈfæm.əl.i/'}], 
+            'Intermediate': [{w:'Groceries', ipa:'/ˈɡroʊ.sɚ.iz/'}, {w:'Neighborhood', ipa:'/ˈneɪ.bɚ.hʊd/'}], 
+            'Advanced': [{w:'Acquaintance', ipa:'/əˈkweɪn.təns/'}, {w:'Philanthropy', ipa:'/fɪˈlæn.θrə.pi/'}] 
+        }
     };
 
     let userLevel = 'Intermediate', currentTopic = '科技電腦', currentCategory = 'Learn', currentScenario = 'General';
@@ -307,10 +322,8 @@
 
     function setLevel(lvl) {
         userLevel = lvl;
-        document.querySelectorAll('.lvl-btn').forEach(btn => {
-            btn.classList.remove('active');
-            if(btn.innerText.includes(lvl.substring(0,2))) btn.classList.add('active');
-        });
+        document.querySelectorAll('.lvl-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll(`.lvl-btn[data-lvl="${lvl}"]`).forEach(btn => btn.classList.add('active'));
         const lvlMap = {'Beginner':'初級 A1','Intermediate':'中級 B1','Advanced':'高級 C1'};
         document.getElementById('topDisplay').innerText = `${lvlMap[lvl]} · 🔥 2`;
         renderLessons(); updateDashboardProgress(); updateExploreMiniStats();
@@ -319,8 +332,7 @@
     function setTopic(topic) {
         document.querySelectorAll('.topic-pill').forEach(p => p.classList.remove('active'));
         event.currentTarget.classList.add('active');
-        currentTopic = topic;
-        document.getElementById('dash-title').innerText = topic;
+        currentTopic = topic; document.getElementById('dash-title').innerText = topic;
         renderLessons(); updateDashboardProgress();
     }
 
@@ -338,20 +350,18 @@
         
         for(let i=1; i<=10; i++) {
             let isCompleted = completedLessons >= i;
-            let numStyle = isCompleted ? "completed" : "";
             container.innerHTML += `
                 <div class="path-lesson" onclick="startLesson(${i})">
-                    <div class="lesson-num ${numStyle}">${isCompleted ? "✓" : i}</div>
+                    <div class="lesson-num ${isCompleted ? 'completed' : ''}">${isCompleted ? "✓" : i}</div>
                     <div style="flex:1;">
                         <div style="font-weight:bold;">第 ${i} 課 - ${lessonTitles[i-1]}</div>
-                        <div style="font-size:0.8rem; color:var(--text-sub);">目標進度: 50 回合</div>
+                        <div style="font-size:0.8rem; color:var(--text-sub);">目標: 50 回合對話</div>
                     </div>
                 </div>
             `;
         }
     }
 
-    // --- 折疊選單 (Accordion) ---
     function toggleAccordion(el) {
         el.classList.toggle('open');
         const body = el.nextElementSibling;
@@ -363,7 +373,6 @@
         closeSidebar(); currentCategory = cat; currentSessionId = Date.now().toString();
         const title = titleStr || `新對話 (${cat})`;
         chatHistory.unshift({ id: currentSessionId, category: cat, title: title, html: '' });
-        localStorage.setItem('otterHistoryProMax', JSON.stringify(chatHistory));
         
         let welcomeMsg = `Hello! Are you ready to start? Say "OK" to begin!`;
         if (cat === "Assistant") welcomeMsg = `你好！我是 <b>${currentTopic}</b> 的專家，請問有什麼我可以幫忙的？`;
@@ -371,11 +380,9 @@
         
         chatLog.innerHTML = `<div class="bubble ai"><b>Coach / Assistant</b><br>${welcomeMsg}<div class="trans">準備好開始了嗎？請按住麥克風回覆！</div></div>`;
         
-        sessionTurns = 0;
-        const sHeader = document.getElementById('sessionHeader');
+        sessionTurns = 0; const sHeader = document.getElementById('sessionHeader');
         if (currentScenario === 'Path' || currentScenario === 'Explore') {
-            sHeader.style.display = 'block';
-            document.getElementById('sessionTopicText').innerText = title;
+            sHeader.style.display = 'block'; document.getElementById('sessionTopicText').innerText = title;
             document.getElementById('sessionTurnText').innerText = `0 / ${MAX_TURNS} (0%)`;
             document.getElementById('sessionProgFill').style.width = '0%';
         } else { sHeader.style.display = 'none'; }
@@ -401,12 +408,11 @@
         };
         renderList('Learn', 'hist-learn'); renderList('Explore', 'hist-explore'); renderList('Assistant', 'hist-assistant');
     }
-    
     function openSidebar() { document.getElementById('sidebar').classList.add('active'); document.getElementById('sbOverlay').classList.add('active'); renderSidebar(); }
     function closeSidebar() { document.getElementById('sidebar').classList.remove('active'); document.getElementById('sbOverlay').classList.remove('active'); }
     function saveHistory() { if(currentSessionId) { const s = chatHistory.find(h => h.id === currentSessionId); if(s) { s.html = chatLog.innerHTML; localStorage.setItem('otterHistoryProMax', JSON.stringify(chatHistory)); } } }
 
-    // --- 啟動對話與功能 ---
+    // --- 啟動對話與特訓 ---
     function startLesson(num) { currentLessonNum = num; startChat('Path', 'Learn', currentTopic); }
     function startExplore(topicStr) { currentExploreTopic = topicStr; startChat('Explore', 'Explore', topicStr); }
     function startChat(scenario, category, specTopic = null) {
@@ -431,7 +437,7 @@
         chatLog.scrollTop = chatLog.scrollHeight; saveHistory();
     }
 
-    // --- 語音辨識與中斷 ---
+    // --- 語音辨識 ---
     const recordBtn = document.getElementById('recordBtn');
     function playAudio(url) { if(activeAudio) { activeAudio.pause(); activeAudio.currentTime = 0; } activeAudio = new Audio(url); activeAudio.play(); }
 
@@ -487,10 +493,11 @@
                 const pronHtml = data.feedback ? data.feedback.pron_html : data.reply;
                 const isCorrect = data.feedback ? data.feedback.is_correct : false;
                 
-                chatLog.innerHTML += `<div class="elsa-card" style="border: 2px solid ${isCorrect ? 'var(--success)' : 'var(--accent)'};"><div style="font-size:0.8rem; color:${isCorrect ? 'var(--success)' : 'var(--accent)'}; font-weight:bold;">${isCorrect ? '✅ 完美發音' : '❌ 需要調整 (紅字)'}</div><div style="font-size:1.8rem; font-weight:bold; margin:10px 0; color:#100C20;">${pronHtml}</div><div style="font-size:0.9rem; color:#555;">${data.reply}</div></div>`;
+                chatLog.innerHTML += `<div class="elsa-card" style="border: 2px solid ${isCorrect ? 'var(--success)' : 'var(--accent)'};"><div style="font-size:0.8rem; color:${isCorrect ? 'var(--success)' : 'var(--accent)'}; font-weight:bold;">${isCorrect ? '✅ 完美發音' : '❌ 需要調整'}</div><div style="font-size:1.8rem; font-weight:bold; margin:10px 0; color:#100C20;">${pronHtml}</div><div style="font-size:0.9rem; color:#555;">${data.reply}</div></div>`;
                 if(isCorrect) { 
                     userData.words[currentTopic] = Math.min((userData.words[currentTopic]||0) + 1, MAX_WORDS);
-                    saveUserData(); pronIndex++; setTimeout(loadNextPronWord, 2500); 
+                    saveUserData(); pronIndex++; 
+                    setTimeout(() => { chatLog.innerHTML += `<div class="bubble ai"><b>系統</b><br>太棒了！接著挑戰下一個單字。</div>`; loadNextPronWord(); }, 2000); 
                 }
             } else {
                 appendMsg("Coach", data.reply, "ai", data.translation);
@@ -504,11 +511,9 @@
                     if (sessionTurns === MAX_TURNS) {
                         setTimeout(() => {
                             chatLog.innerHTML += `<div class="elsa-card"><div style="color:var(--success); font-weight:bold; font-size:1.2rem;">🎉 恭喜！本堂課程已完成 100%</div></div>`;
-                            chatLog.scrollTop = chatLog.scrollHeight; saveHistory();
-                            
                             if(currentScenario === 'Path') { userData.lessons[currentTopic][userLevel] = Math.min(Math.max((userData.lessons[currentTopic][userLevel]||0), currentLessonNum), MAX_LESSONS); renderLessons(); } 
                             else if (currentScenario === 'Explore') { userData.explore[currentExploreTopic][userLevel] = Math.min((userData.explore[currentExploreTopic][userLevel]||0) + 1, MAX_EXPLORE); }
-                            saveUserData();
+                            saveUserData(); chatLog.scrollTop = chatLog.scrollHeight; saveHistory();
                         }, 1000);
                     }
                 }
@@ -541,7 +546,6 @@
         const levelLabels = {'Beginner': '初級 A1', 'Intermediate': '中級 B1', 'Advanced': '高級 C1'};
         const colors = ['#4DA2FF', '#7C4DFF', '#00E676'];
 
-        // 建立三層結構 (主分類 -> 項目 -> 初/中/高)
         const buildNestedBars = (topicArray, dataObj, maxVal, containerId) => {
             const container = document.getElementById(containerId); container.innerHTML = '';
             topicArray.forEach(topic => {
@@ -549,32 +553,19 @@
                 levels.forEach((lvl, idx) => {
                     let val = dataObj[topic][lvl] || 0;
                     let pct = Math.min(100, Math.round((val / maxVal) * 100));
-                    subHtml += `
-                        <div class="prog-row">
-                            <div class="prog-label">${levelLabels[lvl]}</div>
-                            <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width: ${pct}%; background: ${colors[idx]};"></div></div>
-                            <div class="prog-pct" style="color:${colors[idx]};">${val}/${maxVal} <span style="color:var(--text-sub);">(${pct}%)</span></div>
-                        </div>
-                    `;
+                    subHtml += `<div class="prog-row"><div class="prog-label">${levelLabels[lvl]}</div><div class="prog-bar-wrap"><div class="prog-bar-fill" style="width: ${pct}%; background: ${colors[idx]};"></div></div><div class="prog-pct" style="color:${colors[idx]};">${val}/${maxVal} <span style="color:var(--text-sub);">(${pct}%)</span></div></div>`;
                 });
                 container.innerHTML += `<div class="sub-acc-header" onclick="toggleAccordion(this)"><span>${topic}</span><span class="arrow">▼</span></div><div class="sub-acc-body">${subHtml}</div>`;
             });
         };
 
-        // 建立兩層結構 (主分類 -> 項目) - 用於單字
         const buildFlatBars = (topicArray, dataObj, maxVal, containerId, clrs) => {
             const container = document.getElementById(containerId); container.innerHTML = '';
             topicArray.forEach((topic, idx) => {
                 let val = dataObj[topic] || 0;
                 let pct = Math.min(100, Math.round((val / maxVal) * 100));
                 let color = clrs[idx % clrs.length];
-                container.innerHTML += `
-                    <div class="prog-row">
-                        <div class="prog-label">${topic}</div>
-                        <div class="prog-bar-wrap"><div class="prog-bar-fill" style="width: ${pct}%; background: ${color};"></div></div>
-                        <div class="prog-pct" style="color:${color};">${val}/${maxVal} <span style="color:var(--text-sub);">(${pct}%)</span></div>
-                    </div>
-                `;
+                container.innerHTML += `<div class="prog-row"><div class="prog-label">${topic}</div><div class="prog-bar-wrap"><div class="prog-bar-fill" style="width: ${pct}%; background: ${color};"></div></div><div class="prog-pct" style="color:${color};">${val}/${maxVal} <span style="color:var(--text-sub);">(${pct}%)</span></div></div>`;
             });
         };
 
@@ -583,7 +574,6 @@
         buildFlatBars(learnTopics, userData.words, MAX_WORDS, 'prog-words-container', ['#FF5252', '#FF4081', '#E040FB', '#7C4DFF']);
     }
 
-    // 初始化
     renderSidebar(); renderLessons(); updateDashboardProgress(); updateExploreMiniStats();
 </script>
 </body>
