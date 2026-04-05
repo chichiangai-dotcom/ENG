@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AI Coach Pro - Precision Flow</title>
+    <title>AI Coach Pro - Flawless UI</title>
     <style>
         :root { 
             --bg-dark: #100C20; --bg-card: #23203B; --primary: #4DA2FF; 
@@ -57,24 +57,25 @@
         .chat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
         .chat-opt { background: var(--bg-card); padding: 20px 15px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
 
-        /* 🔥 折疊選單專屬樣式 (三層結構) */
+        /* 🔥 折疊選單 (預設開啟) */
         .acc-item { margin-bottom: 15px; }
         .acc-header { padding: 18px 20px; display: flex; justify-content: space-between; cursor: pointer; background: var(--bg-card); border-radius: 12px; font-weight: bold; border: 1px solid rgba(255,255,255,0.05); align-items: center;}
-        .acc-header:active { background: var(--bg-card-hover); }
         .acc-header .arrow { transition: transform 0.3s ease; color: var(--primary); }
         .acc-header.open .arrow { transform: rotate(180deg); }
         .acc-body { display: none; padding: 10px 5px; animation: fadeIn 0.2s ease; }
+        .acc-header.open + .acc-body { display: block; } /* 確保開啟時顯示 */
         
         .sub-acc-header { padding: 15px; display: flex; justify-content: space-between; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.95rem; background: rgba(0,0,0,0.2); border-radius: 8px; margin-bottom: 5px; align-items: center; }
         .sub-acc-header.open .arrow { transform: rotate(180deg); color: var(--primary); }
         .sub-acc-body { display: none; padding: 15px; background: rgba(0,0,0,0.1); border-radius: 0 0 8px 8px; margin-top: -5px; margin-bottom: 10px;}
+        .sub-acc-header.open + .sub-acc-body { display: block; }
 
         /* 進度條列 */
         .prog-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
         .prog-label { width: 70px; font-size: 0.8rem; color: var(--text-main); font-weight: 500; white-space: nowrap;}
         .prog-bar-wrap { flex: 1; height: 10px; background: rgba(255,255,255,0.05); border-radius: 5px; overflow: hidden; }
         .prog-bar-fill { height: 100%; border-radius: 5px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
-        .prog-pct { width: 90px; text-align: right; font-size: 0.75rem; font-family: monospace; color: var(--text-sub);}
+        .prog-pct { width: 85px; text-align: right; font-size: 0.75rem; font-family: monospace; color: var(--text-sub);}
 
         /* 聊天與發音卡片 */
         .bubble { max-width: 85%; padding: 12px 16px; border-radius: 18px; margin-bottom: 12px; line-height: 1.4; font-size: 0.9rem; word-wrap: break-word; }
@@ -100,7 +101,7 @@
         .otter-face::before { left: 10px; } .otter-face::after { right: 10px; }
         .otter-shell { width: 25px; height: 20px; background: var(--primary); border-radius: 50%; position: absolute; left: 37px; top: 65px; z-index: 4; box-shadow: 0 0 15px var(--primary); display: flex; justify-content: center; align-items: center; font-size: 0.7rem; font-weight: bold; }
 
-        /* 底部導覽列 (禁止長按選取) */
+        /* 底部導覽列 */
         .bottom-nav { position: absolute; bottom: 0; width: 100%; background: rgba(16, 12, 32, 0.98); display: flex; justify-content: space-around; align-items: center; height: 80px; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid rgba(255,255,255,0.05); z-index: 100; transition: transform 0.3s; }
         .nav-item { color: var(--text-sub); display: flex; flex-direction: column; align-items: center; font-size: 0.65rem; gap: 4px; cursor: pointer; flex: 1; }
         .nav-item.active { color: white; font-weight: bold; }
@@ -224,18 +225,18 @@
         <h2 style="margin-top:0; margin-bottom: 20px;">全方位學習進度</h2>
         
         <div class="acc-item">
-            <div class="acc-header" onclick="toggleAccordion(this)"><span>📚 課程完成度 (10課/級)</span><span class="arrow">▼</span></div>
-            <div class="acc-body" id="prog-lessons-container"></div>
+            <div class="acc-header open" onclick="toggleAccordion(this)"><span>📚 課程完成度 (10課/級)</span><span class="arrow">▼</span></div>
+            <div class="acc-body" id="prog-lessons-container" style="display:block;"></div>
         </div>
 
         <div class="acc-item">
-            <div class="acc-header" onclick="toggleAccordion(this)"><span>🧭 探索特訓單元 (20回/級)</span><span class="arrow">▼</span></div>
-            <div class="acc-body" id="prog-explore-container"></div>
+            <div class="acc-header open" onclick="toggleAccordion(this)"><span>🧭 探索特訓單元 (20回/級)</span><span class="arrow">▼</span></div>
+            <div class="acc-body" id="prog-explore-container" style="display:block;"></div>
         </div>
 
         <div class="acc-item">
-            <div class="acc-header" onclick="toggleAccordion(this)"><span>📖 單字與發音掌握 (2000字/類)</span><span class="arrow">▼</span></div>
-            <div class="acc-body" id="prog-words-container" style="background:var(--bg-card); padding:15px; border-radius:10px;"></div>
+            <div class="acc-header open" onclick="toggleAccordion(this)"><span>📖 單字與發音掌握 (2000字/類)</span><span class="arrow">▼</span></div>
+            <div class="acc-body" id="prog-words-container" style="background:var(--bg-card); padding:15px; border-radius:10px; display:block;"></div>
         </div>
     </div>
 
@@ -259,19 +260,19 @@
 </div>
 
 <script>
-    // --- 嚴謹的進度結構 V7 ---
+    // --- 嚴謹的進度結構 V8 (確保重置版號) ---
     const MAX_LESSONS = 10, MAX_WORDS = 2000, MAX_EXPLORE = 20;
     const learnTopics = ['科技電腦', '商務職場', '旅遊通關', '日常社交'];
-    const expTopics = ['TOEIC 口說衝刺', 'IELTS 雅思模擬考', '海外生存必備']; // 完美對應中文標籤
+    const expTopics = ['TOEIC 口說衝刺', 'IELTS 雅思模擬考', '海外生存必備'];
     
-    const currentVersion = "otterProgressV7"; 
+    const currentVersion = "otterProgressV8"; 
     let userData = JSON.parse(localStorage.getItem(currentVersion));
     
     if (!userData || typeof userData.lessons['科技電腦'] !== 'object') {
         userData = { lessons: {}, words: {}, explore: {} };
         learnTopics.forEach(t => { 
             userData.lessons[t] = {'Beginner':0, 'Intermediate':0, 'Advanced':0}; 
-            userData.words[t] = 0; // 單字以總數計
+            userData.words[t] = 0; 
         });
         expTopics.forEach(t => { 
             userData.explore[t] = {'Beginner':0, 'Intermediate':0, 'Advanced':0}; 
@@ -279,7 +280,7 @@
         localStorage.setItem(currentVersion, JSON.stringify(userData));
     }
 
-    // 發音庫 (擴充)
+    // 發音庫
     const pronDB = {
         '科技電腦': { 
             'Beginner': [{w:'Mouse', ipa:'/maʊs/'}, {w:'Screen', ipa:'/skriːn/'}, {w:'Keyboard', ipa:'/ˈkiː.bɔːrd/'}], 
@@ -322,7 +323,7 @@
         closeSidebar();
         if(tabId === 'dashboard') updateDashboardProgress();
         if(tabId === 'explore') updateExploreMiniStats();
-        if(tabId === 'progress') updateProgressUI();
+        if(tabId === 'progress') updateProgressUI(); // 確保每次點進去都渲染最新進度
     }
 
     function setLevel(lvl) {
@@ -361,7 +362,7 @@
                     <div class="lesson-num ${numStyle}">${isCompleted ? "✓" : i}</div>
                     <div style="flex:1;">
                         <div style="font-weight:bold;">第 ${i} 課 - ${lessonTitles[i-1]}</div>
-                        <div style="font-size:0.8rem; color:var(--text-sub);">目標進度: 50 回合</div>
+                        <div style="font-size:0.8rem; color:var(--text-sub);">目標: 50 回合對話</div>
                     </div>
                 </div>
             `;
@@ -450,7 +451,7 @@
 
     const startRec = async (e) => {
         e.preventDefault(); if (isRecording) return;
-        if(activeAudio) { activeAudio.pause(); activeAudio = null; } // 🔥 強制閉嘴
+        if(activeAudio) { activeAudio.pause(); activeAudio = null; } 
         if(!document.getElementById('tab-chat').classList.contains('active')) switchTab('chat');
         if(!currentSessionId) createNewChat('Learn');
         try {
@@ -468,7 +469,6 @@
         isRecording = false; recordBtn.classList.remove('recording');
     };
 
-    // 🔥 嚴格的防護：只要手滑開就停止錄音
     recordBtn.addEventListener('mousedown', startRec); recordBtn.addEventListener('mouseup', stopRec); recordBtn.addEventListener('mouseleave', stopRec);
     recordBtn.addEventListener('touchstart', startRec, {passive: false}); recordBtn.addEventListener('touchend', stopRec, {passive: false}); recordBtn.addEventListener('touchcancel', stopRec, {passive: false});
 
@@ -477,9 +477,10 @@
         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
         const formData = new FormData(); formData.append('file', audioBlob, 'audio.webm');
 
-        // 🔥 將 context 傳給 Whisper 以提高針對性字詞的準確度
-        let sttContext = currentScenario === 'Pronunciation_Eval' ? targetPronWord : currentTopic;
-        formData.append('context', sttContext);
+        // 🔥 將 context 傳給 Whisper
+        let sttContext = currentScenario === 'Pronunciation_Eval' ? targetPronWord : '';
+        formData.append('context_word', sttContext);
+        formData.append('scenario', currentScenario);
 
         try {
             const sttRes = await fetch('/api/transcribe', { method: 'POST', body: formData });
@@ -567,7 +568,7 @@
                     let pct = Math.min(100, Math.round((val / maxVal) * 100));
                     subHtml += `<div class="prog-row"><div class="prog-label">${levelLabels[lvl]}</div><div class="prog-bar-wrap"><div class="prog-bar-fill" style="width: ${pct}%; background: ${colors[idx]};"></div></div><div class="prog-pct" style="color:${colors[idx]};">${val}/${maxVal} <span style="color:var(--text-sub);">(${pct}%)</span></div></div>`;
                 });
-                container.innerHTML += `<div class="sub-acc-header" onclick="toggleAccordion(this)"><span>${topic}</span><span class="arrow">▼</span></div><div class="sub-acc-body">${subHtml}</div>`;
+                container.innerHTML += `<div class="sub-acc-header open" onclick="toggleAccordion(this)"><span>${topic}</span><span class="arrow">▼</span></div><div class="sub-acc-body" style="display:block;">${subHtml}</div>`;
             });
         };
 
