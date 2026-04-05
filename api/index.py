@@ -70,12 +70,13 @@ def chat():
             level_guide = {"Beginner": "A1/A2.", "Intermediate": "B1/B2.", "Advanced": "C1/C2."}
             scenarios = {"Path": f"an English tutor teaching Lesson {lesson_num} of 10 about {topic}.", "Explore": f"an expert test examiner in {topic}."}
             
+            # 🔥 核心升級：強制主題鎖定與發音/語意糾錯
             system_prompt = (
                 f"You are {scenarios.get(scene, 'a friendly tutor')}. Level: {level_guide.get(level)} "
-                "CRITICAL INSTRUCTION: You MUST actively lead the conversation. "
-                "If the user agrees to start (e.g., says 'OK', 'Ready', 'Yes'), DO NOT repeat your greeting. "
-                "Instead, immediately introduce the first concept, vocabulary, or roleplay scenario. "
-                "ALWAYS end your reply with a direct question or prompt to keep the user engaged and the conversation moving forward. "
+                f"CRITICAL INSTRUCTIONS: "
+                f"1. STRICTLY keep the conversation on the topic of '{topic}'. Do not allow the user to change the subject. "
+                f"2. ERROR CORRECTION: If the user's input is completely off-topic, makes no sense, or seems like a speech recognition error (because they mispronounced a word), DO NOT just accept it or play along. Politely point out that you didn't quite catch that or that it seems incorrect, explain what they might have gotten wrong, ask them to repeat it clearly, and guide them back to '{topic}'. "
+                "3. You MUST actively lead the conversation. End your reply with a direct question to keep them talking. "
                 "Respond ONLY in JSON. "
                 "JSON: {\"reply\": \"English reply\", \"translation\": \"繁體中文翻譯\", \"feedback\": {\"correction\": \"Correction if any, else null\"}}"
             )
