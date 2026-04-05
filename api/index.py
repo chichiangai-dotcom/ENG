@@ -21,31 +21,40 @@ def index(): return render_template("index.html")
 def transcribe():
     try:
         file = request.files['file']
-        context = request.form.get('context', '') # 接收前端傳來的單字或主題
-        file_content = file.read()
+        context_word = request.form.get('context_word', '') # 只接收純英文單字
+        scenario = request.form.get('scenario', '')
         
+        file_content = file.read()
         if len(file_content) < 2000: 
             return jsonify({"text": "", "error": "silent"})
 
         buffer = io.BytesIO(file_content)
         buffer.name = "audio.mp3" 
         
-        # 🔥 給 Whisper 的作弊提示：告訴它我們預期聽到什麼，大幅提升準確度
-        prompt_text = "Daily English conversation."
-        if context:
-            prompt_text = f"The user is an English learner trying to say words related to: {context}. Please transcribe accurately."
+        # 🔥 Whisper 防幻覺提示詞設定
+        prompt_text = "Hello, this is a daily English conversation."
+        if scenario == 'Pronunciation_Eval' and context_word:
+            prompt_text = context_word # 發音特訓時，只給目標英文單字當提示
 
         transcription = client.audio.transcriptions.create(
             file=buffer, model="whisper-large-v3", language="en", response_format="text",
-            temperature=0, prompt=prompt_text
+            temperature=0.0, prompt=prompt_text
         )
         result = str(transcription).strip()
         
-        # 過濾空泛的幻覺
-        hallucinations = ["thank you", "thanks for watching", "subtitles", "subscribe", "thanks.", "thank you."]
-        if any(h in result.lower() for h in hallucinations) and len(result) < 25:
+        # 🔥 終極幻覺過濾器 (去除噪音腦補)
+        lower_result = result.lower().replace('.', '').replace('!', '').replace('?', '').strip()
+        lower_prompt = prompt_text.lower().replace('.', '').strip()
+        
+        hallucinations = ["thank you", "thanks for watching", "subtitles", "subscribe", "thanks", "hello", "旅遊通關", "科技電腦", "日常社交"]
+        
+        # 如果辨識結果是空的、是常見幻覺、或者在沒說話時直接吐出 prompt_text，就當作沒聲音
+        if not lower_result or \
+           any(h in lower_result for h in hallucinations) or \
+           (scenario == 'Pronunciation_Eval' and lower_result == lower_prompt and len(file_content) < 10000): 
+            # 檔案太小卻精準辨識出單字，通常是幻覺
             result = ""
-            
+
         return jsonify({"text": result})
     except: return jsonify({"error": "STT Failed"}), 500
 
@@ -80,14 +89,12 @@ def chat():
             level_guide = {"Beginner": "A1/A2.", "Intermediate": "B1/B2.", "Advanced": "C1/C2."}
             scenarios = {"Path": f"an English tutor teaching Lesson {lesson_num} of 10 about {topic}.", "Explore": f"an expert test examiner in {topic}."}
             
-            # 🔥 防脫軌指令：不重頭開始，針對上一句回應
             system_prompt = (
                 f"You are {scenarios.get(scene, 'a friendly tutor')}. Level: {level_guide.get(level)} "
                 f"CRITICAL INSTRUCTIONS: "
-                f"1. We are in the middle of a lesson about '{topic}'. "
-                f"2. DO NOT restart the scenario or repeat your initial greeting. "
-                f"3. If the user goes off-topic, makes no sense, or gives a wrong answer, briefly address what they said, gently correct them, and smoothly guide them back to the CURRENT step of '{topic}'. "
-                f"4. Always end your reply with a question to keep them talking. "
+                f"1. STRICTLY keep the conversation on the topic of '{topic}'. "
+                f"2. ERROR CORRECTION: If the user's input is completely off-topic or seems like a speech recognition error, politely explain what they might have gotten wrong, ask them to repeat it clearly, and guide them back to '{topic}'. "
+                "3. You MUST actively lead the conversation. End your reply with a direct question to keep them talking. "
                 "Respond ONLY in JSON. "
                 "JSON: {\"reply\": \"English reply\", \"translation\": \"繁體中文翻譯\", \"feedback\": {\"correction\": \"Correction if any, else null\"}}"
             )
