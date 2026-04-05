@@ -21,21 +21,31 @@ def index(): return render_template("index.html")
 def transcribe():
     try:
         file = request.files['file']
+        context = request.form.get('context', '') # 接收前端傳來的單字或主題
         file_content = file.read()
+        
         if len(file_content) < 2000: 
             return jsonify({"text": "", "error": "silent"})
 
         buffer = io.BytesIO(file_content)
         buffer.name = "audio.mp3" 
         
+        # 🔥 給 Whisper 的作弊提示：告訴它我們預期聽到什麼，大幅提升準確度
+        prompt_text = "Daily English conversation."
+        if context:
+            prompt_text = f"The user is an English learner trying to say words related to: {context}. Please transcribe accurately."
+
         transcription = client.audio.transcriptions.create(
             file=buffer, model="whisper-large-v3", language="en", response_format="text",
-            temperature=0, prompt="Daily English conversation. Return empty if silent or just noise."
+            temperature=0, prompt=prompt_text
         )
         result = str(transcription).strip()
-        hallucinations = ["thank you", "thanks for watching", "subtitles", "subscribe", "thanks."]
+        
+        # 過濾空泛的幻覺
+        hallucinations = ["thank you", "thanks for watching", "subtitles", "subscribe", "thanks.", "thank you."]
         if any(h in result.lower() for h in hallucinations) and len(result) < 25:
             result = ""
+            
         return jsonify({"text": result})
     except: return jsonify({"error": "STT Failed"}), 500
 
@@ -70,13 +80,14 @@ def chat():
             level_guide = {"Beginner": "A1/A2.", "Intermediate": "B1/B2.", "Advanced": "C1/C2."}
             scenarios = {"Path": f"an English tutor teaching Lesson {lesson_num} of 10 about {topic}.", "Explore": f"an expert test examiner in {topic}."}
             
-            # 🔥 核心升級：強制主題鎖定與發音/語意糾錯
+            # 🔥 防脫軌指令：不重頭開始，針對上一句回應
             system_prompt = (
                 f"You are {scenarios.get(scene, 'a friendly tutor')}. Level: {level_guide.get(level)} "
                 f"CRITICAL INSTRUCTIONS: "
-                f"1. STRICTLY keep the conversation on the topic of '{topic}'. Do not allow the user to change the subject. "
-                f"2. ERROR CORRECTION: If the user's input is completely off-topic, makes no sense, or seems like a speech recognition error (because they mispronounced a word), DO NOT just accept it or play along. Politely point out that you didn't quite catch that or that it seems incorrect, explain what they might have gotten wrong, ask them to repeat it clearly, and guide them back to '{topic}'. "
-                "3. You MUST actively lead the conversation. End your reply with a direct question to keep them talking. "
+                f"1. We are in the middle of a lesson about '{topic}'. "
+                f"2. DO NOT restart the scenario or repeat your initial greeting. "
+                f"3. If the user goes off-topic, makes no sense, or gives a wrong answer, briefly address what they said, gently correct them, and smoothly guide them back to the CURRENT step of '{topic}'. "
+                f"4. Always end your reply with a question to keep them talking. "
                 "Respond ONLY in JSON. "
                 "JSON: {\"reply\": \"English reply\", \"translation\": \"繁體中文翻譯\", \"feedback\": {\"correction\": \"Correction if any, else null\"}}"
             )
