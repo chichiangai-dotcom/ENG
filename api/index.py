@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify, send_file, render_template
 from flask_cors import CORS
 from groq import Groq
 import edge_tts
+from pymongo import MongoClient  # 🌟 新增：MongoDB 套件
 
 if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
@@ -14,8 +15,40 @@ CORS(app)
 RAW_KEY = "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"
 client = Groq(api_key=RAW_KEY)
 
+# ==========================================
+# 🌟 新增：MongoDB Atlas 連線設定
+# ==========================================
+MONGO_URI = "mongodb+srv://chichiangai_db_user:AkxvonTnansUtVFc@cluster0.wvkc0rt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+try:
+    mongo_client = MongoClient(MONGO_URI)
+    db = mongo_client["AI_Coach_DB"]
+    print("✅ 後端已成功連線至 MongoDB Atlas 雲端資料庫！")
+except Exception as e:
+    print(f"❌ MongoDB 連線失敗: {e}")
+# ==========================================
+
 @app.route("/")
 def index(): return render_template("index.html")
+
+# ==========================================
+# 🌟 新增：取得 MongoDB 單字庫 API
+# ==========================================
+@app.route("/api/words", methods=["GET"])
+def get_words():
+    try:
+        collection_name = request.args.get('collection')
+        if not collection_name:
+            return jsonify({"error": "缺少 collection 參數"}), 400
+            
+        col = db[collection_name]
+        # 從資料庫撈出該集合的所有單字，並排除預設的 _id 欄位
+        words_data = list(col.find({}, {"_id": 0}))
+        
+        return jsonify({"words": words_data})
+    except Exception as e:
+        traceback.print_exc()
+        return jsonify({"error": "資料庫讀取失敗", "details": str(e)}), 500
+# ==========================================
 
 @app.route("/api/transcribe", methods=["POST"])
 def transcribe():
