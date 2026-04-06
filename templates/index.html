@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AI Coach Pro - Coach Edition</title>
+    <title>AI Coach Pro - Ultimate Progress</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { 
             --bg-dark: #100C20; --bg-card: #23203B; --bg-card-hover: #312E52;
@@ -28,7 +29,6 @@
         .action-btns { display: flex; gap: 10px; }
         .action-btn { padding: 5px; font-size: 0.9rem; cursor: pointer; }
         
-        /* 複選框樣式 */
         .hist-checkbox { display: none; margin-right: 10px; width: 18px; height: 18px; cursor: pointer; }
         .edit-mode .hist-checkbox { display: block; }
         .edit-mode .action-btns { display: none; }
@@ -57,7 +57,7 @@
         /* 卡片與內容 */
         .pronun-card { background: linear-gradient(135deg, rgba(77, 162, 255, 0.1), rgba(124, 77, 255, 0.1)); border: 1px solid var(--primary); border-radius: 15px; padding: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; }
         .pronun-card:active { transform: scale(0.98); }
-        .path-box { background: var(--bg-card); border-radius: 15px; overflow: hidden; margin-bottom: 20px; }
+        .path-box { background: var(--bg-card); border-radius: 15px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);}
         .path-header { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .path-lesson { padding: 15px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid rgba(255,255,255,0.02); cursor: pointer; transition: 0.2s; }
         .path-lesson:active { background: rgba(255,255,255,0.05); }
@@ -71,6 +71,21 @@
         .coach-flag { font-size: 2rem; }
         .coach-name { font-weight: bold; font-size: 0.9rem; }
         .coach-desc { font-size: 0.7rem; color: var(--text-sub); }
+
+        /* 進度專屬 UI */
+        .prog-tabs { display: flex; margin-bottom: 20px; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 5px; }
+        .prog-tab { flex: 1; text-align: center; padding: 10px; border-radius: 8px; font-size: 0.85rem; color: var(--text-sub); cursor: pointer; transition: 0.3s; }
+        .prog-tab.active { background: var(--primary); color: white; font-weight: bold; box-shadow: 0 4px 10px rgba(77, 162, 255, 0.3); }
+        
+        .radar-container { position: relative; width: 100%; max-width: 280px; margin: 0 auto; padding: 10px; }
+        .primary-btn { background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; color: white; padding: 15px; border-radius: 12px; font-size: 1rem; font-weight: bold; width: 100%; margin-top: 15px; cursor: pointer; box-shadow: 0 5px 15px rgba(77, 162, 255, 0.3); transition: 0.2s;}
+        .primary-btn:active { transform: scale(0.98); }
+
+        .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
+        .stat-card { background: var(--bg-card); padding: 20px; border-radius: 15px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+        .stat-val { font-size: 2.2rem; font-weight: 800; color: white; margin-bottom: 5px; font-family: monospace; }
+        .stat-label { font-size: 0.8rem; color: var(--text-sub); display: flex; justify-content: space-between; align-items: center; }
+        .stat-icon { font-size: 1.8rem; opacity: 0.8; }
 
         /* 折疊選單 */
         .acc-item { margin-bottom: 15px; }
@@ -115,7 +130,7 @@
         .nav-item { color: var(--text-sub); display: flex; flex-direction: column; align-items: center; font-size: 0.65rem; gap: 4px; cursor: pointer; flex: 1; }
         .nav-item.active { color: white; font-weight: bold; }
         .record-wrap { position: relative; width: 60px; height: 60px; }
-        .record-btn { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; justify-content: center; align-items: center; font-size: 1.5rem; border: none; position: absolute; top: -20px; box-shadow: 0 5px 15px rgba(77, 162, 255, 0.4); touch-action: none; z-index: 101; cursor: pointer; -webkit-user-select: none; -webkit-touch-callout: none; outline: none;}
+        .record-btn { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; justify-content: center; align-items: center; font-size: 1.5rem; border: none; position: absolute; top: -20px; box-shadow: 0 5px 15px rgba(77, 162, 255, 0.4); touch-action: none; z-index: 101; cursor: pointer; outline: none;}
         .record-btn.recording { background: var(--accent); animation: pulse 1s infinite; }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 82, 82, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(255, 82, 82, 0); } }
     </style>
@@ -162,7 +177,7 @@
             <div style="font-size:2.5rem;">🗣️</div>
             <div style="flex:1;">
                 <div style="font-weight:bold; font-size:1.1rem; color:var(--primary);">專屬發音特訓</div>
-                <div style="font-size:0.8rem; color:var(--text-sub); margin-top:3px;">連接雲端字庫，精準糾錯</div>
+                <div style="font-size:0.8rem; color:var(--text-sub); margin-top:3px;">連接單字庫，精準糾錯</div>
             </div>
         </div>
 
@@ -261,18 +276,50 @@
     </div>
 
     <div id="tab-progress" class="screen">
-        <h2 style="margin-top:0; margin-bottom: 20px;">全方位學習進度</h2>
-        <div class="acc-item">
-            <div class="acc-header open" onclick="toggleAccordion(this)"><span>📚 課程完成度 (10課/級)</span><span class="arrow">▼</span></div>
-            <div class="acc-body" id="prog-lessons-container" style="display:block;"></div>
+        <h2 style="margin-top:0; margin-bottom: 15px;">全方位學習進度</h2>
+        
+        <div class="prog-tabs">
+            <div class="prog-tab active" id="btn-prog-overview" onclick="switchProgView('overview')">個人資料</div>
+            <div class="prog-tab" id="btn-prog-details" onclick="switchProgView('details')">課程明細</div>
         </div>
-        <div class="acc-item">
-            <div class="acc-header open" onclick="toggleAccordion(this)"><span>🧭 探索特訓單元 (20回/級)</span><span class="arrow">▼</span></div>
-            <div class="acc-body" id="prog-explore-container" style="display:block;"></div>
+
+        <div id="view-prog-overview">
+            <div class="path-box" style="padding: 20px 15px; text-align: center;">
+                <h3 style="margin-bottom:5px; color:white;">你的熟練度</h3>
+                <p style="font-size:0.75rem; color:var(--text-sub); margin-bottom:15px;">保持下去！持續學習以解鎖剩餘的分數。</p>
+                <div class="radar-container">
+                    <canvas id="skillsRadar"></canvas>
+                </div>
+                <p style="font-size:0.75rem; color:var(--text-sub); margin-top:15px;">你的分數大約在 15 堂課後解鎖更精準的分析</p>
+                <button class="primary-btn" onclick="switchTab('dashboard')">前往課程</button>
+            </div>
+
+            <h3 style="margin: 20px 0 10px 0; font-size:1.1rem;">活動 <span style="font-size:0.8rem; color:var(--text-sub); font-weight:normal;">所有時間</span></h3>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-val" id="ui-study-time">0m</div>
+                    <div class="stat-label">學習時間 <span class="stat-icon">🕒</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-val" id="ui-completed-courses">0</div>
+                    <div class="stat-label">已完成課程 <span class="stat-icon">📋</span></div>
+                </div>
+            </div>
         </div>
-        <div class="acc-item">
-            <div class="acc-header open" onclick="toggleAccordion(this)"><span>📖 單字與發音掌握 (2000字/類)</span><span class="arrow">▼</span></div>
-            <div class="acc-body" id="prog-words-container" style="background:var(--bg-card); padding:15px; border-radius:10px; display:block;"></div>
+
+        <div id="view-prog-details" style="display:none;">
+            <div class="acc-item">
+                <div class="acc-header open" onclick="toggleAccordion(this)"><span>📚 課程完成度 (10課/級)</span><span class="arrow">▼</span></div>
+                <div class="acc-body" id="prog-lessons-container" style="display:block;"></div>
+            </div>
+            <div class="acc-item">
+                <div class="acc-header open" onclick="toggleAccordion(this)"><span>🧭 探索特訓單元 (20回/級)</span><span class="arrow">▼</span></div>
+                <div class="acc-body" id="prog-explore-container" style="display:block;"></div>
+            </div>
+            <div class="acc-item">
+                <div class="acc-header open" onclick="toggleAccordion(this)"><span>📖 單字與發音掌握 (2000字/類)</span><span class="arrow">▼</span></div>
+                <div class="acc-body" id="prog-words-container" style="background:var(--bg-card); padding:15px; border-radius:10px; display:block;"></div>
+            </div>
         </div>
     </div>
 
@@ -331,23 +378,27 @@
         }
     }
 
-    // --- 全局變數與設定 ---
+    // --- 全局變數與設定 (加入活動統計) ---
     const MAX_LESSONS = 10, MAX_WORDS = 2000, MAX_EXPLORE = 20;
     const learnTopics = ['科技電腦', '商務職場', '旅遊通關', '日常社交'];
     const expTopics = ['TOEIC 口說衝刺', 'IELTS 雅思模擬考', '海外生存必備'];
     
-    let globalVoice = 'en-US-AvaNeural'; // 預設教練語音
-    const currentVersion = "otterProgressV10"; 
+    let globalVoice = 'en-US-AvaNeural'; 
+    const currentVersion = "otterProgressV11"; 
     let userData = JSON.parse(localStorage.getItem(currentVersion));
     
-    if (!userData || typeof userData.lessons['科技電腦'] !== 'object') {
-        userData = { lessons: {}, words: {}, explore: {} };
+    if (!userData || !userData.stats) {
+        let oldData = userData || { lessons: {}, words: {}, explore: {} };
+        userData = { 
+            lessons: oldData.lessons || {}, words: oldData.words || {}, explore: oldData.explore || {},
+            stats: { studyTimeSec: 0, completedCourses: 0 } // 新增活動統計
+        };
         learnTopics.forEach(t => { 
-            userData.lessons[t] = {'Beginner':0, 'Intermediate':0, 'Advanced':0}; 
-            userData.words[t] = 0; 
+            if(!userData.lessons[t]) userData.lessons[t] = {'Beginner':0, 'Intermediate':0, 'Advanced':0}; 
+            if(userData.words[t] === undefined) userData.words[t] = 0; 
         });
         expTopics.forEach(t => { 
-            userData.explore[t] = {'Beginner':0, 'Intermediate':0, 'Advanced':0}; 
+            if(!userData.explore[t]) userData.explore[t] = {'Beginner':0, 'Intermediate':0, 'Advanced':0}; 
         });
         localStorage.setItem(currentVersion, JSON.stringify(userData));
     }
@@ -359,10 +410,59 @@
     let chatHistory = JSON.parse(localStorage.getItem('otterHistoryProMax')) || [];
     let currentSessionId = null; let previousTab = 'dashboard';
     const chatLog = document.getElementById('chatLog');
-    let isEditMode = false; // 控制側邊欄編輯模式
+    let isEditMode = false; 
+    
+    // 學習計時器
+    let studyTimer = null;
 
     const dbTopicMap = { '科技電腦': 'tech', '商務職場': 'business', '旅遊通關': 'travel', '日常社交': 'daily' };
     const dbLevelMap = { 'Beginner': 'beginner', 'Intermediate': 'intermediate', 'Advanced': 'advanced' };
+
+    // --- 雷達圖初始化 ---
+    let radarChartInstance = null;
+    function initRadarChart() {
+        const ctx = document.getElementById('skillsRadar').getContext('2d');
+        if(radarChartInstance) radarChartInstance.destroy();
+        
+        // 模擬數據 (實務上可依據 userData 計算)
+        let totalWords = Object.values(userData.words).reduce((a,b)=>a+b, 0);
+        let completed = userData.stats.completedCourses;
+        let pPron = Math.min(100, 30 + (totalWords * 2));
+        let pVoc = Math.min(100, 40 + (totalWords * 1.5));
+        let pGra = Math.min(100, 25 + (completed * 5));
+        let pFlu = Math.min(100, 30 + (completed * 8));
+        let pInt = Math.min(100, 35 + (completed * 4));
+
+        Chart.defaults.color = '#A0A0B5';
+        radarChartInstance = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['發音', '流暢', '語調', '語法', '詞彙'],
+                datasets: [{
+                    label: '熟練度',
+                    data: [pPron, pFlu, pInt, pGra, pVoc],
+                    backgroundColor: 'rgba(77, 162, 255, 0.4)',
+                    borderColor: '#4DA2FF',
+                    pointBackgroundColor: '#7C4DFF',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#7C4DFF',
+                    borderWidth: 2,
+                }]
+            },
+            options: {
+                scales: {
+                    r: {
+                        angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                        pointLabels: { font: { size: 12, family: 'Inter' } },
+                        ticks: { display: false, min: 0, max: 100 }
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+    }
 
     // --- 介面控制 ---
     function switchTab(tabId) {
@@ -376,9 +476,24 @@
         document.getElementById('topNav').style.display = (tabId === 'chat') ? 'none' : 'flex';
         closeSidebar();
         
+        // 計時器邏輯：只有在 chat 畫面才計時
+        if(tabId === 'chat') {
+            if(!studyTimer) studyTimer = setInterval(() => { userData.stats.studyTimeSec++; }, 1000);
+        } else {
+            if(studyTimer) { clearInterval(studyTimer); studyTimer = null; saveUserData(); }
+        }
+
         if(tabId === 'dashboard') updateDashboardProgress();
         if(tabId === 'explore') updateExploreMiniStats();
-        if(tabId === 'progress') updateProgressUI(); 
+        if(tabId === 'progress') { updateProgressUI(); initRadarChart(); }
+    }
+
+    function switchProgView(viewId) {
+        document.getElementById('btn-prog-overview').classList.remove('active');
+        document.getElementById('btn-prog-details').classList.remove('active');
+        document.getElementById('btn-prog-' + viewId).classList.add('active');
+        document.getElementById('view-prog-overview').style.display = viewId === 'overview' ? 'block' : 'none';
+        document.getElementById('view-prog-details').style.display = viewId === 'details' ? 'block' : 'none';
     }
 
     function goBackFromChat() { switchTab(previousTab); }
@@ -453,7 +568,7 @@
         chatHistory.unshift({ id: currentSessionId, category: cat, title: titleStr, html: '', configKey: configKey, messages: [] });
         
         let welcomeMsg = `Hello! I'm your coach. Say "Ready" to begin!`;
-        if (currentScenario === "Pronunciation_Eval") welcomeMsg = `連接單字庫`;
+        if (currentScenario === "Pronunciation_Eval") welcomeMsg = `連接單字庫中...`;
         
         chatLog.innerHTML = `<div class="bubble ai"><b>Coach</b><br>${welcomeMsg}</div>`;
         document.getElementById('chatMainTitle').innerText = titleStr;
@@ -470,7 +585,7 @@
     }
 
     function loadChat(id) {
-        if(isEditMode) return; // 編輯模式下不跳轉
+        if(isEditMode) return; 
         currentSessionId = id; const session = chatHistory.find(h => h.id === id);
         if(session) { 
             currentCategory = session.category; chatLog.innerHTML = session.html; 
@@ -489,7 +604,6 @@
 
     function renameChat(e, id) { e.stopPropagation(); const newName = prompt("重新命名標題："); if(newName) { const s = chatHistory.find(h => h.id === id); if(s) { s.title = newName; localStorage.setItem('otterHistoryProMax', JSON.stringify(chatHistory)); renderSidebar(); } } }
     
-    // --- 複選刪除邏輯 ---
     function toggleEditHistory() {
         isEditMode = !isEditMode;
         const scrollArea = document.getElementById('sidebarScroll');
@@ -507,7 +621,7 @@
             chatHistory = chatHistory.filter(h => !idsToDelete.includes(h.id));
             localStorage.setItem('otterHistoryProMax', JSON.stringify(chatHistory));
             if(idsToDelete.includes(currentSessionId)) { currentSessionId = null; chatLog.innerHTML = ""; switchTab('dashboard'); }
-            toggleEditHistory(); // 關閉編輯模式
+            toggleEditHistory(); 
         }
     }
 
@@ -576,11 +690,11 @@
                 currentWordList = data.words;
                 loadNextPronWord();
             } else {
-                appendMsg("System", `❌ 在資料庫找不到集合 <b>${collectionName}</b>，請確認你的 MongoDB 已同步。`, "ai");
+                appendMsg("System", `❌ 找不到單字庫 <b>${collectionName}</b>，請確認已同步。`, "ai");
                 document.getElementById('chatTitle').innerText = "載入失敗";
             }
         } catch (error) {
-            appendMsg("System", "❌ 無法連接至伺服器，請確保後端 API 正在運行。", "ai");
+            appendMsg("System", "❌ 無法連接伺服器，請檢查後端。", "ai");
             document.getElementById('chatTitle').innerText = "連線錯誤";
         }
     }
@@ -706,8 +820,15 @@
                     if (sessionTurns === MAX_TURNS) {
                         setTimeout(() => {
                             chatLog.innerHTML += `<div class="elsa-card"><div style="color:var(--success); font-weight:bold; font-size:1.2rem;">🎉 恭喜！本堂課程已完成 100%</div></div>`;
-                            if(currentScenario === 'Path') { userData.lessons[currentTopic][userLevel] = Math.min(Math.max((userData.lessons[currentTopic][userLevel]||0), currentLessonNum), MAX_LESSONS); renderLessons(); } 
-                            else if (currentScenario === 'Explore') { userData.explore[currentExploreTopic][userLevel] = Math.min((userData.explore[currentExploreTopic][userLevel]||0) + 1, MAX_EXPLORE); }
+                            if(currentScenario === 'Path') { 
+                                userData.lessons[currentTopic][userLevel] = Math.min(Math.max((userData.lessons[currentTopic][userLevel]||0), currentLessonNum), MAX_LESSONS); 
+                                userData.stats.completedCourses++; // 完成課程數+1
+                                renderLessons(); 
+                            } 
+                            else if (currentScenario === 'Explore') { 
+                                userData.explore[currentExploreTopic][userLevel] = Math.min((userData.explore[currentExploreTopic][userLevel]||0) + 1, MAX_EXPLORE);
+                                userData.stats.completedCourses++; 
+                            }
                             saveUserData(); chatLog.scrollTop = chatLog.scrollHeight; saveHistory();
                         }, 1000);
                     }
@@ -736,6 +857,11 @@
     }
 
     function updateProgressUI() {
+        // 更新活動卡片數字
+        let studyMins = Math.ceil((userData.stats.studyTimeSec || 0) / 60);
+        document.getElementById('ui-study-time').innerText = studyMins + 'm';
+        document.getElementById('ui-completed-courses').innerText = userData.stats.completedCourses || 0;
+
         const levels = ['Beginner', 'Intermediate', 'Advanced'];
         const levelLabels = {'Beginner': '初級 A1', 'Intermediate': '中級 B1', 'Advanced': '高級 C1'};
         const colors = ['#4DA2FF', '#7C4DFF', '#00E676'];
