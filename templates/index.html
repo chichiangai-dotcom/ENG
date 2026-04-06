@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AI Coach Pro - Flawless UI</title>
+    <title>AI Coach Pro - Ultimate UX</title>
     <style>
         :root { 
-            --bg-dark: #100C20; --bg-card: #23203B; --primary: #4DA2FF; 
-            --secondary: #7C4DFF; --text-main: #FFFFFF; --text-sub: #A0A0B5; 
+            --bg-dark: #100C20; --bg-card: #23203B; --bg-card-hover: #312E52;
+            --primary: #4DA2FF; --secondary: #7C4DFF; --text-main: #FFFFFF; --text-sub: #A0A0B5; 
             --accent: #FF5252; --success: #00E676; --otter-brown: #744A32; --otter-face: #F1D4B6;
         }
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; padding: 0; }
@@ -15,10 +15,10 @@
         .app-shell { width: 100%; max-width: 480px; height: 100%; display: flex; flex-direction: column; position: relative; background: linear-gradient(180deg, #1C1836 0%, var(--bg-dark) 100%); padding-bottom: env(safe-area-inset-bottom); overflow: hidden; }
 
         /* 側邊欄 */
-        .sidebar { position: absolute; top: 0; left: 0; width: 280px; height: 100%; background: #16122B; z-index: 999; transform: translateX(-100%); transition: 0.3s; display: flex; flex-direction: column; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
+        .sidebar { position: absolute; top: 0; left: 0; width: 280px; height: 100%; background: #16122B; z-index: 999; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
         .sidebar.active { transform: translateX(0); }
-        .sb-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 998; display: none; }
-        .sb-overlay.active { display: block; }
+        .sb-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 998; opacity: 0; pointer-events: none; transition: 0.3s; }
+        .sb-overlay.active { opacity: 1; pointer-events: auto; }
         .sb-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; font-weight: bold; }
         .sb-scroll { flex: 1; overflow-y: auto; padding: 10px; }
         .sb-section-title { font-size: 0.75rem; color: var(--primary); margin: 15px 10px 5px 10px; text-transform: uppercase; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
@@ -32,9 +32,11 @@
         .screen.active { display: flex; animation: fadeIn 0.3s ease; }
         .screen::-webkit-scrollbar { display: none; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
         .top-nav { padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 10; }
         .icon-btn { font-size: 1.5rem; cursor: pointer; color: white; padding: 5px; }
         
+        /* 選取框 (已修正) */
         .level-selector { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 12px; display: flex; margin-bottom: 15px; }
         .lvl-btn { flex: 1; text-align: center; padding: 8px; border-radius: 8px; font-size: 0.85rem; color: var(--text-sub); cursor: pointer; transition: 0.2s; border: 2px solid transparent; }
         .lvl-btn.active { background: rgba(77, 162, 255, 0.2); color: white; font-weight: bold; border-color: var(--primary); box-shadow: 0 2px 10px rgba(77, 162, 255, 0.2); }
@@ -57,13 +59,13 @@
         .chat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
         .chat-opt { background: var(--bg-card); padding: 20px 15px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
 
-        /* 🔥 折疊選單 (預設開啟) */
+        /* 折疊選單 */
         .acc-item { margin-bottom: 15px; }
         .acc-header { padding: 18px 20px; display: flex; justify-content: space-between; cursor: pointer; background: var(--bg-card); border-radius: 12px; font-weight: bold; border: 1px solid rgba(255,255,255,0.05); align-items: center;}
         .acc-header .arrow { transition: transform 0.3s ease; color: var(--primary); }
         .acc-header.open .arrow { transform: rotate(180deg); }
         .acc-body { display: none; padding: 10px 5px; animation: fadeIn 0.2s ease; }
-        .acc-header.open + .acc-body { display: block; } /* 確保開啟時顯示 */
+        .acc-header.open + .acc-body { display: block; }
         
         .sub-acc-header { padding: 15px; display: flex; justify-content: space-between; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.95rem; background: rgba(0,0,0,0.2); border-radius: 8px; margin-bottom: 5px; align-items: center; }
         .sub-acc-header.open .arrow { transform: rotate(180deg); color: var(--primary); }
@@ -77,7 +79,13 @@
         .prog-bar-fill { height: 100%; border-radius: 5px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
         .prog-pct { width: 85px; text-align: right; font-size: 0.75rem; font-family: monospace; color: var(--text-sub);}
 
-        /* 聊天與發音卡片 */
+        /* 🔥 聊天與發音卡片 (新增頂部導覽列) */
+        .chat-top-bar { display: flex; align-items: center; padding: 15px 20px; background: rgba(16, 12, 32, 0.95); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .session-header { padding: 10px 20px; background: rgba(16, 12, 32, 0.95); border-bottom: 1px solid rgba(255,255,255,0.05); display: none;}
+        .session-title { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-sub); margin-bottom: 5px; }
+        .session-prog-wrap { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+        .session-prog-fill { height: 100%; width: 0%; background: var(--success); transition: width 0.5s; }
+
         .bubble { max-width: 85%; padding: 12px 16px; border-radius: 18px; margin-bottom: 12px; line-height: 1.4; font-size: 0.9rem; word-wrap: break-word; }
         .user { align-self: flex-end; background: linear-gradient(135deg, var(--secondary), var(--primary)); }
         .ai { align-self: flex-start; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.05); }
@@ -85,21 +93,6 @@
         .elsa-card { background: white; color: #333; border-radius: 15px; padding: 20px; margin: 15px 0; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
         .elsa-card .word { font-size: 2rem; font-weight: 800; color: #100C20; margin-bottom: 5px; }
         .elsa-card .ipa { color: var(--secondary); font-family: monospace; font-size: 1.2rem; margin-bottom: 10px; }
-
-        .session-header { padding: 10px; background: rgba(16, 12, 32, 0.95); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid rgba(255,255,255,0.05); display: none;}
-        .session-title { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-sub); margin-bottom: 5px; }
-        .session-prog-wrap { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
-        .session-prog-fill { height: 100%; width: 0%; background: var(--success); transition: width 0.5s; }
-
-        /* 海獺 */
-        .otter-container { display: flex; justify-content: center; margin: 10px 0; }
-        .otter { position: relative; width: 100px; height: 110px; animation: float 4s ease-in-out infinite; transform: scale(1.1); margin-top: 10px; }
-        .otter-body { width: 80px; height: 90px; background: var(--otter-brown); border-radius: 40px 40px 20px 20px; position: absolute; left: 10px; top: 10px; }
-        .otter-head { width: 70px; height: 60px; background: var(--otter-brown); border-radius: 35px; position: absolute; left: 15px; top: 0px; }
-        .otter-face { width: 50px; height: 35px; background: var(--otter-face); border-radius: 20px; position: absolute; left: 10px; top: 20px; z-index: 2; }
-        .otter-face::before, .otter-face::after { content: ''; width: 6px; height: 6px; background: #333; border-radius: 50%; position: absolute; top: 8px; }
-        .otter-face::before { left: 10px; } .otter-face::after { right: 10px; }
-        .otter-shell { width: 25px; height: 20px; background: var(--primary); border-radius: 50%; position: absolute; left: 37px; top: 65px; z-index: 4; box-shadow: 0 0 15px var(--primary); display: flex; justify-content: center; align-items: center; font-size: 0.7rem; font-weight: bold; }
 
         /* 底部導覽列 */
         .bottom-nav { position: absolute; bottom: 0; width: 100%; background: rgba(16, 12, 32, 0.98); display: flex; justify-content: space-around; align-items: center; height: 80px; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid rgba(255,255,255,0.05); z-index: 100; transition: transform 0.3s; }
@@ -147,7 +140,7 @@
             <div style="font-size:2.5rem;">🗣️</div>
             <div style="flex:1;">
                 <div style="font-weight:bold; font-size:1.1rem; color:var(--primary);">專屬發音特訓</div>
-                <div style="font-size:0.8rem; color:var(--text-sub); margin-top:3px;">精準糾錯，邁向 2000 核心單字</div>
+                <div style="font-size:0.8rem; color:var(--text-sub); margin-top:3px;">精準糾錯，隨機單字庫挑戰</div>
             </div>
         </div>
 
@@ -228,25 +221,31 @@
             <div class="acc-header open" onclick="toggleAccordion(this)"><span>📚 課程完成度 (10課/級)</span><span class="arrow">▼</span></div>
             <div class="acc-body" id="prog-lessons-container" style="display:block;"></div>
         </div>
-
         <div class="acc-item">
             <div class="acc-header open" onclick="toggleAccordion(this)"><span>🧭 探索特訓單元 (20回/級)</span><span class="arrow">▼</span></div>
             <div class="acc-body" id="prog-explore-container" style="display:block;"></div>
         </div>
-
         <div class="acc-item">
             <div class="acc-header open" onclick="toggleAccordion(this)"><span>📖 單字與發音掌握 (2000字/類)</span><span class="arrow">▼</span></div>
             <div class="acc-body" id="prog-words-container" style="background:var(--bg-card); padding:15px; border-radius:10px; display:block;"></div>
         </div>
     </div>
 
-    <div id="tab-chat" class="screen" style="padding-bottom: 120px;">
+    <div id="tab-chat" class="screen" style="padding: 0; padding-bottom: 120px;">
+        <div class="chat-top-bar">
+            <div onclick="goBackFromChat()" style="font-size:1.5rem; cursor:pointer; width:30px;">←</div>
+            <div style="flex:1; text-align:center; font-weight:bold; font-size:1rem;" id="chatMainTitle">對話</div>
+            <div style="width:30px;"></div>
+        </div>
         <div class="session-header" id="sessionHeader">
             <div class="session-title"><span id="sessionTopicText"></span><span id="sessionTurnText">0 / 50</span></div>
             <div class="session-prog-wrap"><div class="session-prog-fill" id="sessionProgFill"></div></div>
         </div>
-        <div style="text-align: center; color: var(--text-sub); font-size: 0.75rem; margin: 10px 0;" id="chatTitle">Ready</div>
-        <div id="chatLog" style="display: flex; flex-direction: column;"></div>
+        
+        <div style="padding: 0 20px;">
+            <div style="text-align: center; color: var(--text-sub); font-size: 0.75rem; margin: 10px 0;" id="chatTitle">Ready</div>
+            <div id="chatLog" style="display: flex; flex-direction: column;"></div>
+        </div>
     </div>
 
     <div class="bottom-nav" id="mainNav">
@@ -260,7 +259,7 @@
 </div>
 
 <script>
-    // --- 嚴謹的進度結構 V8 (確保重置版號) ---
+    // --- 嚴謹的進度結構 V8 ---
     const MAX_LESSONS = 10, MAX_WORDS = 2000, MAX_EXPLORE = 20;
     const learnTopics = ['科技電腦', '商務職場', '旅遊通關', '日常社交'];
     const expTopics = ['TOEIC 口說衝刺', 'IELTS 雅思模擬考', '海外生存必備'];
@@ -280,51 +279,56 @@
         localStorage.setItem(currentVersion, JSON.stringify(userData));
     }
 
-    // 發音庫
+    // 發音庫 (擴充字庫陣列，供隨機抽取)
     const pronDB = {
         '科技電腦': { 
-            'Beginner': [{w:'Mouse', ipa:'/maʊs/'}, {w:'Screen', ipa:'/skriːn/'}, {w:'Keyboard', ipa:'/ˈkiː.bɔːrd/'}], 
-            'Intermediate': [{w:'Database', ipa:'/ˈdeɪ.tə.beɪs/'}, {w:'Algorithm', ipa:'/ˈæl.ɡə.rɪ.ðəm/'}, {w:'Software', ipa:'/ˈsɑːft.wer/'}], 
-            'Advanced': [{w:'Architecture', ipa:'/ˈɑːr.kə.tek.tʃɚ/'}, {w:'Cryptography', ipa:'/krɪpˈtɑː.ɡrə.fi/'}] 
+            'Beginner': [{w:'Mouse', ipa:'/maʊs/'}, {w:'Screen', ipa:'/skriːn/'}, {w:'Keyboard', ipa:'/ˈkiː.bɔːrd/'}, {w:'Click', ipa:'/klɪk/'}, {w:'File', ipa:'/faɪl/'}, {w:'Cable', ipa:'/ˈkeɪ.bəl/'}], 
+            'Intermediate': [{w:'Database', ipa:'/ˈdeɪ.tə.beɪs/'}, {w:'Algorithm', ipa:'/ˈæl.ɡə.rɪ.ðəm/'}, {w:'Software', ipa:'/ˈsɑːft.wer/'}, {w:'Network', ipa:'/ˈnet.wɝːk/'}, {w:'Password', ipa:'/ˈpæs.wɝːd/'}], 
+            'Advanced': [{w:'Architecture', ipa:'/ˈɑːr.kə.tek.tʃɚ/'}, {w:'Cryptography', ipa:'/krɪpˈtɑː.ɡrə.fi/'}, {w:'Vulnerability', ipa:'/ˌvʌl.nɚ.əˈbɪl.ə.t̬i/'}, {w:'Synchronization', ipa:'/sɪŋ.krə.nəˈzeɪ.ʃən/'}] 
         },
         '商務職場': { 
-            'Beginner': [{w:'Meeting', ipa:'/ˈmiː.t̬ɪŋ/'}, {w:'Office', ipa:'/ˈɑː.fɪs/'}], 
-            'Intermediate': [{w:'Negotiation', ipa:'/nəˌɡoʊ.ʃiˈeɪ.ʃən/'}, {w:'Proposal', ipa:'/prəˈpoʊ.zəl/'}], 
-            'Advanced': [{w:'Acquisition', ipa:'/ˌæk.wəˈzɪʃ.ən/'}, {w:'Entrepreneurship', ipa:'/ˌɑːn.trə.prəˈnɝː.ʃɪp/'}] 
+            'Beginner': [{w:'Meeting', ipa:'/ˈmiː.t̬ɪŋ/'}, {w:'Office', ipa:'/ˈɑː.fɪs/'}, {w:'Boss', ipa:'/bɑːs/'}, {w:'Desk', ipa:'/desk/'}], 
+            'Intermediate': [{w:'Negotiation', ipa:'/nəˌɡoʊ.ʃiˈeɪ.ʃən/'}, {w:'Proposal', ipa:'/prəˈpoʊ.zəl/'}, {w:'Contract', ipa:'/ˈkɑːn.trækt/'}, {w:'Strategy', ipa:'/ˈstræt̬.ə.dʒi/'}], 
+            'Advanced': [{w:'Acquisition', ipa:'/ˌæk.wəˈzɪʃ.ən/'}, {w:'Entrepreneurship', ipa:'/ˌɑːn.trə.prəˈnɝː.ʃɪp/'}, {w:'Consensus', ipa:'/kənˈsen.səs/'}] 
         },
         '旅遊通關': { 
-            'Beginner': [{w:'Ticket', ipa:'/ˈtɪk.ɪt/'}, {w:'Airport', ipa:'/ˈer.pɔːrt/'}], 
-            'Intermediate': [{w:'Itinerary', ipa:'/aɪˈtɪn.ə.rer.i/'}, {w:'Baggage', ipa:'/ˈbæɡ.ɪdʒ/'}], 
-            'Advanced': [{w:'Customs', ipa:'/ˈkʌs.təmz/'}, {w:'Quarantine', ipa:'/ˈkwɔːr.ən.tiːn/'}] 
+            'Beginner': [{w:'Ticket', ipa:'/ˈtɪk.ɪt/'}, {w:'Airport', ipa:'/ˈer.pɔːrt/'}, {w:'Hotel', ipa:'/hoʊˈtel/'}, {w:'Passport', ipa:'/ˈpæs.pɔːrt/'}], 
+            'Intermediate': [{w:'Itinerary', ipa:'/aɪˈtɪn.ə.rer.i/'}, {w:'Baggage', ipa:'/ˈbæɡ.ɪdʒ/'}, {w:'Currency', ipa:'/ˈkɝː.ən.si/'}], 
+            'Advanced': [{w:'Customs', ipa:'/ˈkʌs.təmz/'}, {w:'Quarantine', ipa:'/ˈkwɔːr.ən.tiːn/'}, {w:'Immigration', ipa:'/ˌɪm.əˈɡreɪ.ʃən/'}] 
         },
         '日常社交': { 
-            'Beginner': [{w:'Friend', ipa:'/frend/'}, {w:'Family', ipa:'/ˈfæm.əl.i/'}], 
-            'Intermediate': [{w:'Groceries', ipa:'/ˈɡroʊ.sɚ.iz/'}, {w:'Neighborhood', ipa:'/ˈneɪ.bɚ.hʊd/'}], 
-            'Advanced': [{w:'Acquaintance', ipa:'/əˈkweɪn.təns/'}, {w:'Philanthropy', ipa:'/fɪˈlæn.θrə.pi/'}] 
+            'Beginner': [{w:'Friend', ipa:'/frend/'}, {w:'Family', ipa:'/ˈfæm.əl.i/'}, {w:'Water', ipa:'/ˈwɑː.t̬ɚ/'}, {w:'Store', ipa:'/stɔːr/'}], 
+            'Intermediate': [{w:'Groceries', ipa:'/ˈɡroʊ.sɚ.iz/'}, {w:'Neighborhood', ipa:'/ˈneɪ.bɚ.hʊd/'}, {w:'Recommend', ipa:'/ˌrek.əˈmend/'}], 
+            'Advanced': [{w:'Acquaintance', ipa:'/əˈkweɪn.təns/'}, {w:'Philanthropy', ipa:'/fɪˈlæn.θrə.pi/'}, {w:'Reciprocity', ipa:'/ˌres.ɪˈprɑː.sə.t̬i/'}] 
         }
     };
 
     let userLevel = 'Intermediate', currentTopic = '科技電腦', currentCategory = 'Learn', currentScenario = 'General';
-    let currentExploreTopic = null, targetPronWord = null, pronIndex = 0, currentWordList = [], currentLessonNum = 1;
+    let currentExploreTopic = null, targetPronWord = null, currentWordList = [], currentLessonNum = 1;
     let sessionTurns = 0; const MAX_TURNS = 50; 
     let mediaRecorder, audioChunks = [], isRecording = false, activeAudio = null;
     let chatHistory = JSON.parse(localStorage.getItem('otterHistoryProMax')) || [];
-    let currentSessionId = null;
+    let currentSessionId = null; let previousTab = 'dashboard';
     const chatLog = document.getElementById('chatLog');
 
     // --- 介面控制 ---
     function switchTab(tabId) {
+        if(tabId !== 'chat') previousTab = tabId;
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById('tab-' + tabId).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         const map = {'dashboard':0, 'explore':1, 'aichat':3, 'progress':4};
         if(map[tabId] !== undefined) document.querySelectorAll('.nav-item')[map[tabId]].classList.add('active');
+        
         document.getElementById('topNav').style.display = (tabId === 'chat') ? 'none' : 'flex';
         closeSidebar();
+        
         if(tabId === 'dashboard') updateDashboardProgress();
         if(tabId === 'explore') updateExploreMiniStats();
-        if(tabId === 'progress') updateProgressUI(); // 確保每次點進去都渲染最新進度
+        if(tabId === 'progress') updateProgressUI(); 
     }
+
+    function goBackFromChat() { switchTab(previousTab); }
 
     function setLevel(lvl) {
         userLevel = lvl;
@@ -375,21 +379,30 @@
         body.style.display = el.classList.contains('open') ? 'block' : 'none';
     }
 
-    // --- 歷史紀錄系統 ---
-    function createNewChat(cat = currentCategory, titleStr = null) {
+    // --- 精簡歷史紀錄名稱與接續對話 ---
+    function getShortName(topic, lvl, lesson) {
+        const lvlMap = {'Beginner':'初', 'Intermediate':'中', 'Advanced':'高'};
+        const tMap = {'科技電腦':'科技', '商務職場':'商務', '旅遊通關':'旅遊', '日常社交':'日常', 'TOEIC 口說衝刺':'TOEIC', 'IELTS 雅思模擬考':'IELTS', '海外生存必備':'海外', 'Programming & Coding Expert':'程式', 'Professional Chef':'廚師', 'World Traveler Guide':'旅遊', 'General Knowledge Encyclopedia':'百科', 'Psychologist':'心理', 'Professional Translator':'翻譯'};
+        let shortT = tMap[topic] || topic.substring(0,2);
+        let shortL = lvlMap[lvl] || lvl;
+        if (lesson) return `${shortT}/${shortL}/${lesson}`;
+        return `${shortT}/${shortL}`;
+    }
+
+    function createNewChat(cat, titleStr, configKey) {
         closeSidebar(); currentCategory = cat; currentSessionId = Date.now().toString();
-        const title = titleStr || `新對話 (${cat})`;
-        chatHistory.unshift({ id: currentSessionId, category: cat, title: title, html: '' });
+        chatHistory.unshift({ id: currentSessionId, category: cat, title: titleStr, html: '', configKey: configKey });
         
-        let welcomeMsg = `Hello! We will focus on <b>${currentTopic}</b>. Say "OK" or "Ready" to begin, and I will lead the way!`;
+        let welcomeMsg = `Hello! I'm your tutor for <b>${currentTopic}</b>. Say "Ready" to begin, and I will guide you!`;
         if (cat === "Assistant") welcomeMsg = `你好！我是 <b>${currentTopic}</b> 的專家，請問有什麼我可以幫忙的？`;
-        if (currentScenario === "Pronunciation_Eval") welcomeMsg = `Welcome to Pronunciation Training! Let's get started.`;
+        if (currentScenario === "Pronunciation_Eval") welcomeMsg = `Welcome to Pronunciation Training! Let's master 2000 words.`;
         
-        chatLog.innerHTML = `<div class="bubble ai"><b>Coach / Assistant</b><br>${welcomeMsg}<div class="trans">準備好開始了嗎？請按住麥克風回覆！老師會負責引導你。</div></div>`;
+        chatLog.innerHTML = `<div class="bubble ai"><b>Coach / Assistant</b><br>${welcomeMsg}<div class="trans">準備好了嗎？請按住麥克風回覆！老師會負責引導你。</div></div>`;
+        document.getElementById('chatMainTitle').innerText = titleStr;
         
         sessionTurns = 0; const sHeader = document.getElementById('sessionHeader');
         if (currentScenario === 'Path' || currentScenario === 'Explore') {
-            sHeader.style.display = 'block'; document.getElementById('sessionTopicText').innerText = title;
+            sHeader.style.display = 'block'; document.getElementById('sessionTopicText').innerText = "課程對話任務";
             document.getElementById('sessionTurnText').innerText = `0 / ${MAX_TURNS} (0%)`;
             document.getElementById('sessionProgFill').style.width = '0%';
         } else { sHeader.style.display = 'none'; }
@@ -400,7 +413,10 @@
 
     function loadChat(id) {
         currentSessionId = id; const session = chatHistory.find(h => h.id === id);
-        if(session) { currentCategory = session.category; chatLog.innerHTML = session.html; }
+        if(session) { 
+            currentCategory = session.category; chatLog.innerHTML = session.html; 
+            document.getElementById('chatMainTitle').innerText = session.title;
+        }
         document.getElementById('sessionHeader').style.display = 'none'; switchTab('chat');
     }
 
@@ -420,26 +436,46 @@
     function closeSidebar() { document.getElementById('sidebar').classList.remove('active'); document.getElementById('sbOverlay').classList.remove('active'); }
     function saveHistory() { if(currentSessionId) { const s = chatHistory.find(h => h.id === currentSessionId); if(s) { s.html = chatLog.innerHTML; localStorage.setItem('otterHistoryProMax', JSON.stringify(chatHistory)); } } }
 
-    // --- 啟動對話與特訓 ---
+    // --- 啟動對話與特訓 (接續防重複機制) ---
     function startLesson(num) { currentLessonNum = num; startChat('Path', 'Learn', currentTopic); }
     function startExplore(topicStr) { currentExploreTopic = topicStr; startChat('Explore', 'Explore', topicStr); }
+    
     function startChat(scenario, category, specTopic = null) {
         currentScenario = scenario; currentCategory = category || 'Learn';
         if(specTopic) currentTopic = specTopic; targetPronWord = null; 
-        let title = scenario === 'Assistant' ? `AI 專家: ${currentTopic}` : (scenario === 'Path' ? `${currentTopic} (第${currentLessonNum}課 - ${userLevel})` : `${currentTopic} (${userLevel})`);
-        createNewChat(currentCategory, title);
+
+        let configKey = ""; let title = "";
+        if (scenario === 'Assistant') { title = `AI/${getShortName(currentTopic, '')}`; configKey = `Asst_${currentTopic}`; }
+        else if (scenario === 'Path') { title = getShortName(currentTopic, userLevel, currentLessonNum); configKey = `Path_${currentTopic}_${userLevel}_${currentLessonNum}`; }
+        else if (scenario === 'Explore') { title = getShortName(currentTopic, userLevel, ''); configKey = `Exp_${currentTopic}_${userLevel}`; }
+
+        let existingSession = chatHistory.find(h => h.configKey === configKey);
+        if (existingSession) { loadChat(existingSession.id); } 
+        else { createNewChat(currentCategory, title, configKey); }
     }
 
     function startPronunciationSession() {
         currentScenario = "Pronunciation_Eval"; currentCategory = "Learn";
-        createNewChat("Learn", `發音特訓: ${currentTopic} (${userLevel})`);
-        currentWordList = pronDB[currentTopic] ? (pronDB[currentTopic][userLevel] || pronDB['科技電腦']['Beginner']) : pronDB['科技電腦']['Beginner'];
-        pronIndex = 0; loadNextPronWord();
+        let configKey = `Pron_${currentTopic}_${userLevel}`;
+        let title = `發音/${getShortName(currentTopic, userLevel, '')}`;
+
+        let existingSession = chatHistory.find(h => h.configKey === configKey);
+        if (existingSession) { 
+            loadChat(existingSession.id); 
+        } else { 
+            createNewChat("Learn", title, configKey); 
+            currentWordList = pronDB[currentTopic] ? (pronDB[currentTopic][userLevel] || pronDB['科技電腦']['Beginner']) : pronDB['科技電腦']['Beginner'];
+            loadNextPronWord();
+        }
     }
 
+    // 發音特訓：隨機抽題機制 (模擬大字庫)
     function loadNextPronWord() {
-        const wordData = currentWordList[pronIndex % currentWordList.length]; 
+        currentWordList = pronDB[currentTopic] ? (pronDB[currentTopic][userLevel] || pronDB['科技電腦']['Beginner']) : pronDB['科技電腦']['Beginner'];
+        let randomIdx = Math.floor(Math.random() * currentWordList.length);
+        const wordData = currentWordList[randomIdx]; 
         targetPronWord = wordData.w;
+        
         chatLog.innerHTML += `<div class="elsa-card"><div style="color:var(--text-sub); font-size:0.8rem; margin-bottom:10px;">聽老師示範，再按麥克風跟讀：</div><div class="word">${wordData.w}</div><div class="ipa">${wordData.ipa}</div></div>`;
         playAudio(`/api/tts?text=${encodeURIComponent(wordData.w)}&voice=en-US-AvaNeural`);
         chatLog.scrollTop = chatLog.scrollHeight; saveHistory();
@@ -453,7 +489,7 @@
         e.preventDefault(); if (isRecording) return;
         if(activeAudio) { activeAudio.pause(); activeAudio = null; } 
         if(!document.getElementById('tab-chat').classList.contains('active')) switchTab('chat');
-        if(!currentSessionId) createNewChat('Learn');
+
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
             mediaRecorder = new MediaRecorder(stream); audioChunks = [];
@@ -469,6 +505,7 @@
         isRecording = false; recordBtn.classList.remove('recording');
     };
 
+    // 嚴格防呆：手滑開也停止錄音
     recordBtn.addEventListener('mousedown', startRec); recordBtn.addEventListener('mouseup', stopRec); recordBtn.addEventListener('mouseleave', stopRec);
     recordBtn.addEventListener('touchstart', startRec, {passive: false}); recordBtn.addEventListener('touchend', stopRec, {passive: false}); recordBtn.addEventListener('touchcancel', stopRec, {passive: false});
 
@@ -478,7 +515,7 @@
         const formData = new FormData(); formData.append('file', audioBlob, 'audio.webm');
 
         // 🔥 將 context 傳給 Whisper
-        let sttContext = currentScenario === 'Pronunciation_Eval' ? targetPronWord : '';
+        let sttContext = currentScenario === 'Pronunciation_Eval' ? targetPronWord : currentTopic;
         formData.append('context_word', sttContext);
         formData.append('scenario', currentScenario);
 
@@ -509,7 +546,7 @@
                 chatLog.innerHTML += `<div class="elsa-card" style="border: 2px solid ${isCorrect ? 'var(--success)' : 'var(--accent)'};"><div style="font-size:0.8rem; color:${isCorrect ? 'var(--success)' : 'var(--accent)'}; font-weight:bold;">${isCorrect ? '✅ 完美發音' : '❌ 需要調整 (紅字)'}</div><div style="font-size:1.8rem; font-weight:bold; margin:10px 0; color:#100C20;">${pronHtml}</div><div style="font-size:0.9rem; color:#555;">${data.reply}</div></div>`;
                 if(isCorrect) { 
                     userData.words[currentTopic] = Math.min((userData.words[currentTopic]||0) + 1, MAX_WORDS);
-                    saveUserData(); pronIndex++; 
+                    saveUserData();  
                     setTimeout(() => { chatLog.innerHTML += `<div class="bubble ai"><b>系統</b><br>太棒了！準備下一個單字。</div>`; loadNextPronWord(); }, 2000); 
                 }
             } else {
