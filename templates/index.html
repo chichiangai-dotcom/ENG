@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AI Coach Pro - Ultimate Progress</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>AI Coach Pro - Enhanced UI</title>
     <style>
         :root { 
-            --bg-dark: #100C20; --bg-card: #23203B; --bg-card-hover: #312E52;
-            --primary: #4DA2FF; --secondary: #7C4DFF; --text-main: #FFFFFF; --text-sub: #A0A0B5; 
-            --accent: #FF5252; --success: #00E676; 
+            --bg-dark: #0D0914; --bg-card: #1E1A2D; --bg-card-hover: #2A253F;
+            --primary: #00E5FF; --secondary: #B000FF; --accent: #FF1744; 
+            --text-main: #FFFFFF; --text-sub: #8B879A; --success: #00E676; 
+            --orange: #FF9100; --yellow: #FFEA00;
         }
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-main); display: flex; justify-content: center; height: 100dvh; overflow: hidden; }
-        .app-shell { width: 100%; max-width: 480px; height: 100%; display: flex; flex-direction: column; position: relative; background: linear-gradient(180deg, #1C1836 0%, var(--bg-dark) 100%); padding-bottom: env(safe-area-inset-bottom); overflow: hidden; }
+        body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg-dark); color: var(--text-main); display: flex; justify-content: center; height: 100dvh; overflow: hidden; }
+        .app-shell { width: 100%; max-width: 480px; height: 100%; display: flex; flex-direction: column; position: relative; background: linear-gradient(180deg, #161224 0%, var(--bg-dark) 100%); padding-bottom: env(safe-area-inset-bottom); overflow: hidden; }
 
         /* 側邊欄與複選刪除 */
         .sidebar { position: absolute; top: 0; left: 0; width: 280px; height: 100%; background: #16122B; z-index: 999; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
@@ -29,7 +29,7 @@
         .action-btns { display: flex; gap: 10px; }
         .action-btn { padding: 5px; font-size: 0.9rem; cursor: pointer; }
         
-        .hist-checkbox { display: none; margin-right: 10px; width: 18px; height: 18px; cursor: pointer; }
+        .hist-checkbox { display: none; margin-right: 10px; width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
         .edit-mode .hist-checkbox { display: block; }
         .edit-mode .action-btns { display: none; }
         .bulk-del-btn { display: none; background: var(--accent); color: white; border: none; padding: 15px; text-align: center; font-weight: bold; cursor: pointer; width: 100%; }
@@ -44,72 +44,74 @@
         .top-nav { padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 10; }
         .icon-btn { font-size: 1.5rem; cursor: pointer; color: white; padding: 5px; }
         
-        /* 選取框 */
         .level-selector { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 12px; display: flex; margin-bottom: 15px; }
         .lvl-btn { flex: 1; text-align: center; padding: 8px; border-radius: 8px; font-size: 0.85rem; color: var(--text-sub); cursor: pointer; transition: 0.2s; border: 2px solid transparent; }
-        .lvl-btn.active { background: rgba(77, 162, 255, 0.2); color: white; font-weight: bold; border-color: var(--primary); box-shadow: 0 2px 10px rgba(77, 162, 255, 0.2); }
+        .lvl-btn.active { background: rgba(0, 229, 255, 0.15); color: white; font-weight: bold; border-color: var(--primary); box-shadow: 0 2px 10px rgba(0, 229, 255, 0.2); }
 
         .topic-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 10px; margin: 0 -20px 5px -20px; padding-left: 20px; padding-right: 20px; }
         .topic-scroll::-webkit-scrollbar { display: none; }
         .topic-pill { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
-        .topic-pill.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .topic-pill.active { background: var(--primary); color: #000; font-weight: bold; border-color: var(--primary); }
 
         /* 卡片與內容 */
-        .pronun-card { background: linear-gradient(135deg, rgba(77, 162, 255, 0.1), rgba(124, 77, 255, 0.1)); border: 1px solid var(--primary); border-radius: 15px; padding: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; }
+        .pronun-card { background: linear-gradient(135deg, rgba(0, 229, 255, 0.15), rgba(176, 0, 255, 0.15)); border: 1px solid var(--primary); border-radius: 15px; padding: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; }
         .pronun-card:active { transform: scale(0.98); }
-        .path-box { background: var(--bg-card); border-radius: 15px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);}
+        .path-box { background: var(--bg-card); border-radius: 15px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.03);}
         .path-header { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .path-lesson { padding: 15px; display: flex; align-items: center; gap: 15px; border-bottom: 1px solid rgba(255,255,255,0.02); cursor: pointer; transition: 0.2s; }
         .path-lesson:active { background: rgba(255,255,255,0.05); }
         .lesson-num { width: 35px; height: 35px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; justify-content: center; align-items: center; font-weight: bold; color: var(--primary); flex-shrink: 0;}
         .lesson-num.completed { background: var(--success); color: #100C20; }
         
+        /* 探索網格系統 (全新設計) */
+        .explore-cat-header { display: flex; justify-content: space-between; align-items: center; margin: 20px 0 10px 0; }
+        .explore-cat-title { font-size: 1.1rem; font-weight: bold; }
+        .explore-cat-more { font-size: 0.75rem; color: var(--primary); cursor: pointer; }
+        .explore-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .explore-card { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.05); border-radius: 15px; padding: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
+        .explore-card:active { transform: scale(0.95); background: rgba(255,255,255,0.05); }
+        .explore-icon { font-size: 2.2rem; }
+        .explore-title { font-size: 0.85rem; color: var(--text-main); font-weight: 500; text-align: center;}
+        .sparkle { position: absolute; top: 10px; right: 10px; color: var(--secondary); font-size: 0.8rem; }
+
         /* 教練選單網格 */
         .coach-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
         .coach-opt { background: var(--bg-card); padding: 15px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; cursor: pointer; border: 2px solid rgba(255,255,255,0.05); transition: 0.2s;}
-        .coach-opt.active { border-color: var(--primary); background: rgba(77, 162, 255, 0.1); }
+        .coach-opt.active { border-color: var(--primary); background: rgba(0, 229, 255, 0.1); }
         .coach-flag { font-size: 2rem; }
         .coach-name { font-weight: bold; font-size: 0.9rem; }
         .coach-desc { font-size: 0.7rem; color: var(--text-sub); }
 
-        /* 進度專屬 UI */
+        /* 進度頁面 - 圓形圖表 */
         .prog-tabs { display: flex; margin-bottom: 20px; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 5px; }
         .prog-tab { flex: 1; text-align: center; padding: 10px; border-radius: 8px; font-size: 0.85rem; color: var(--text-sub); cursor: pointer; transition: 0.3s; }
-        .prog-tab.active { background: var(--primary); color: white; font-weight: bold; box-shadow: 0 4px 10px rgba(77, 162, 255, 0.3); }
+        .prog-tab.active { background: var(--primary); color: #000; font-weight: bold; }
         
-        .radar-container { position: relative; width: 100%; max-width: 280px; margin: 0 auto; padding: 10px; }
-        .primary-btn { background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; color: white; padding: 15px; border-radius: 12px; font-size: 1rem; font-weight: bold; width: 100%; margin-top: 15px; cursor: pointer; box-shadow: 0 5px 15px rgba(77, 162, 255, 0.3); transition: 0.2s;}
+        .circle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; margin-bottom: 20px; }
+        .circle-item { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .circle-item .label { font-size: 0.85rem; font-weight: bold; color: var(--text-main); }
+        
+        /* SVG 圓環樣式 */
+        .circular-chart { display: block; margin: 0 auto; max-width: 100px; max-height: 100px; }
+        .circle-bg { fill: none; stroke: rgba(255, 255, 255, 0.05); stroke-width: 3.5; }
+        .circle { fill: none; stroke-width: 2.8; stroke-linecap: round; transition: stroke-dasharray 1s ease-out; }
+        .circular-chart.pron .circle { stroke: var(--accent); filter: drop-shadow(0 0 4px var(--accent)); }
+        .circular-chart.voc .circle { stroke: var(--primary); filter: drop-shadow(0 0 4px var(--primary)); }
+        .circular-chart.flu .circle { stroke: var(--yellow); filter: drop-shadow(0 0 4px var(--yellow)); }
+        .circular-chart.int .circle { stroke: var(--secondary); filter: drop-shadow(0 0 4px var(--secondary)); }
+        .percentage { fill: #fff; font-family: monospace; font-size: 0.6em; text-anchor: middle; font-weight: bold; }
+
+        .primary-btn { background: linear-gradient(135deg, var(--primary), var(--secondary)); border: none; color: white; padding: 15px; border-radius: 12px; font-size: 1rem; font-weight: bold; width: 100%; margin-top: 15px; cursor: pointer; transition: 0.2s;}
         .primary-btn:active { transform: scale(0.98); }
 
         .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 10px; }
-        .stat-card { background: var(--bg-card); padding: 20px; border-radius: 15px; position: relative; overflow: hidden; border: 1px solid rgba(255,255,255,0.05); }
+        .stat-card { background: var(--bg-card); padding: 20px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.05); }
         .stat-val { font-size: 2.2rem; font-weight: 800; color: white; margin-bottom: 5px; font-family: monospace; }
         .stat-label { font-size: 0.8rem; color: var(--text-sub); display: flex; justify-content: space-between; align-items: center; }
-        .stat-icon { font-size: 1.8rem; opacity: 0.8; }
-
-        /* 折疊選單 */
-        .acc-item { margin-bottom: 15px; }
-        .acc-header { padding: 18px 20px; display: flex; justify-content: space-between; cursor: pointer; background: var(--bg-card); border-radius: 12px; font-weight: bold; border: 1px solid rgba(255,255,255,0.05); align-items: center;}
-        .acc-header .arrow { transition: transform 0.3s ease; color: var(--primary); }
-        .acc-header.open .arrow { transform: rotate(180deg); }
-        .acc-body { display: none; padding: 10px 5px; animation: fadeIn 0.2s ease; }
-        .acc-header.open + .acc-body { display: block; }
-        
-        .sub-acc-header { padding: 15px; display: flex; justify-content: space-between; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.95rem; background: rgba(0,0,0,0.2); border-radius: 8px; margin-bottom: 5px; align-items: center; }
-        .sub-acc-header.open .arrow { transform: rotate(180deg); color: var(--primary); }
-        .sub-acc-body { display: none; padding: 15px; background: rgba(0,0,0,0.1); border-radius: 0 0 8px 8px; margin-top: -5px; margin-bottom: 10px;}
-        .sub-acc-header.open + .sub-acc-body { display: block; }
-
-        /* 進度條列 */
-        .prog-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
-        .prog-label { width: 70px; font-size: 0.8rem; color: var(--text-main); font-weight: 500; white-space: nowrap;}
-        .prog-bar-wrap { flex: 1; height: 10px; background: rgba(255,255,255,0.05); border-radius: 5px; overflow: hidden; }
-        .prog-bar-fill { height: 100%; border-radius: 5px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
-        .prog-pct { width: 85px; text-align: right; font-size: 0.75rem; font-family: monospace; color: var(--text-sub);}
 
         /* 聊天與發音卡片 */
-        .chat-top-bar { display: flex; align-items: center; padding: 15px 20px; background: rgba(16, 12, 32, 0.95); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .session-header { padding: 10px 20px; background: rgba(16, 12, 32, 0.95); border-bottom: 1px solid rgba(255,255,255,0.05); display: none;}
+        .chat-top-bar { display: flex; align-items: center; padding: 15px 20px; background: rgba(13, 9, 20, 0.95); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .session-header { padding: 10px 20px; background: rgba(13, 9, 20, 0.95); border-bottom: 1px solid rgba(255,255,255,0.05); display: none;}
         .session-title { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-sub); margin-bottom: 5px; }
         .session-prog-wrap { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
         .session-prog-fill { height: 100%; width: 0%; background: var(--success); transition: width 0.5s; }
@@ -118,7 +120,7 @@
         .user { align-self: flex-end; background: linear-gradient(135deg, var(--secondary), var(--primary)); }
         .ai { align-self: flex-start; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.05); }
         .trans { font-size: 0.75rem; color: var(--text-sub); margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); }
-        .elsa-card { background: white; color: #333; border-radius: 15px; padding: 20px; margin: 15px 0; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
+        .elsa-card { background: #FFFFFF; color: #333; border-radius: 15px; padding: 20px; margin: 15px 0; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
         .elsa-card .word { font-size: 2.2rem; font-weight: 800; color: #100C20; margin-bottom: 5px; display: flex; justify-content: center; align-items: center; gap: 10px; }
         .elsa-card .replay-btn { font-size: 1.5rem; cursor: pointer; color: var(--primary); transition: 0.2s; }
         .elsa-card .replay-btn:active { transform: scale(0.8); }
@@ -126,13 +128,13 @@
         .elsa-card .meaning { color: #555; font-size: 0.95rem; font-weight: bold; margin-bottom: 10px; }
 
         /* 底部導覽列 */
-        .bottom-nav { position: absolute; bottom: 0; width: 100%; background: rgba(16, 12, 32, 0.98); display: flex; justify-content: space-around; align-items: center; height: 80px; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid rgba(255,255,255,0.05); z-index: 100; transition: transform 0.3s; }
+        .bottom-nav { position: absolute; bottom: 0; width: 100%; background: rgba(13, 9, 20, 0.98); display: flex; justify-content: space-around; align-items: center; height: 80px; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid rgba(255,255,255,0.05); z-index: 100; transition: transform 0.3s; }
         .nav-item { color: var(--text-sub); display: flex; flex-direction: column; align-items: center; font-size: 0.65rem; gap: 4px; cursor: pointer; flex: 1; }
-        .nav-item.active { color: white; font-weight: bold; }
+        .nav-item.active { color: var(--primary); font-weight: bold; }
         .record-wrap { position: relative; width: 60px; height: 60px; }
-        .record-btn { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; justify-content: center; align-items: center; font-size: 1.5rem; border: none; position: absolute; top: -20px; box-shadow: 0 5px 15px rgba(77, 162, 255, 0.4); touch-action: none; z-index: 101; cursor: pointer; outline: none;}
-        .record-btn.recording { background: var(--accent); animation: pulse 1s infinite; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 82, 82, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(255, 82, 82, 0); } }
+        .record-btn { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; justify-content: center; align-items: center; font-size: 1.5rem; border: none; position: absolute; top: -20px; box-shadow: 0 5px 15px rgba(0, 229, 255, 0.4); touch-action: none; z-index: 101; cursor: pointer; outline: none;}
+        .record-btn.recording { background: var(--accent); box-shadow: 0 0 15px rgba(255, 23, 68, 0.6); animation: pulse 1s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 23, 68, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(255, 23, 68, 0); } }
     </style>
 </head>
 <body>
@@ -157,7 +159,7 @@
 
     <div class="top-nav" id="topNav">
         <div class="icon-btn" onclick="openSidebar()">☰</div>
-        <div style="font-weight:bold; font-size:0.9rem;" id="topDisplay">中級 B1 · 🔥 2</div>
+        <div style="font-weight:bold; font-size:0.9rem; color:var(--primary);" id="topDisplay">中級 B1 · 🔥 2</div>
     </div>
 
     <div id="tab-dashboard" class="screen active">
@@ -167,17 +169,17 @@
             <div class="lvl-btn" data-lvl="Advanced" onclick="setLevel('Advanced')">C1 高級</div>
         </div>
         <div class="topic-scroll">
-            <div class="topic-pill active" onclick="setTopic('科技電腦')">💻 科技</div>
-            <div class="topic-pill" onclick="setTopic('商務職場')">💼 商務</div>
-            <div class="topic-pill" onclick="setTopic('旅遊通關')">✈️ 旅遊</div>
-            <div class="topic-pill" onclick="setTopic('日常社交')">🛒 日常</div>
+            <div class="topic-pill active" onclick="setTopic('科技電腦')">💻 科技電腦</div>
+            <div class="topic-pill" onclick="setTopic('商務職場')">💼 商務職場</div>
+            <div class="topic-pill" onclick="setTopic('旅遊通關')">✈️ 旅遊通關</div>
+            <div class="topic-pill" onclick="setTopic('日常社交')">🛒 日常社交</div>
         </div>
 
         <div class="pronun-card" onclick="startPronunciationSession()">
             <div style="font-size:2.5rem;">🗣️</div>
             <div style="flex:1;">
-                <div style="font-weight:bold; font-size:1.1rem; color:var(--primary);">專屬發音特訓</div>
-                <div style="font-size:0.8rem; color:var(--text-sub); margin-top:3px;">連接單字庫，精準糾錯</div>
+                <div style="font-weight:bold; font-size:1.1rem; color:var(--text-main);">專屬發音特訓</div>
+                <div style="font-size:0.8rem; color:var(--text-sub); margin-top:3px;">連接單字庫</div>
             </div>
         </div>
 
@@ -190,7 +192,7 @@
                         <span style="color:var(--primary);">當前等級進度</span>
                         <span id="dash-topic-pct">0 / 10 課 (0%)</span>
                     </div>
-                    <div class="prog-bar-wrap" style="height:6px; background: rgba(255,255,255,0.1);"><div class="prog-bar-fill" id="dash-topic-fill" style="background:var(--primary); width:0%;"></div></div>
+                    <div class="prog-bar-wrap" style="height:6px;"><div class="prog-bar-fill" id="dash-topic-fill" style="background:var(--primary); width:0%;"></div></div>
                 </div>
             </div>
             <div id="lessonList"></div>
@@ -198,43 +200,48 @@
     </div>
 
     <div id="tab-explore" class="screen">
-        <div class="level-selector">
+        <div class="level-selector" style="margin-bottom: 5px;">
             <div class="lvl-btn" data-lvl="Beginner" onclick="setLevel('Beginner')">A1 基礎</div>
             <div class="lvl-btn active" data-lvl="Intermediate" onclick="setLevel('Intermediate')">B1 實戰</div>
             <div class="lvl-btn" data-lvl="Advanced" onclick="setLevel('Advanced')">C1 高分</div>
         </div>
-        <h2 style="margin-top:0;">探索考題與生活</h2>
-        <div class="path-box">
-            <div class="path-lesson" onclick="startExplore('TOEIC 口說衝刺')">
-                <div style="font-size:1.8rem;">📝</div>
-                <div style="flex:1;">
-                    <div style="font-weight:bold;">TOEIC 口說衝刺</div>
-                    <div style="font-size:0.75rem; color:var(--text-sub); margin-top:5px; display:flex; justify-content:space-between;">
-                        <span>當前等級進度</span> <span id="exp-toeic-text">0 / 20 (0%)</span>
-                    </div>
-                    <div class="prog-bar-wrap" style="height:4px; margin-top:3px;"><div class="prog-bar-fill" id="exp-toeic-fill" style="background:var(--secondary); width:0%;"></div></div>
-                </div>
-            </div>
-            <div class="path-lesson" onclick="startExplore('IELTS 雅思模擬考')">
-                <div style="font-size:1.8rem;">🎓</div>
-                <div style="flex:1;">
-                    <div style="font-weight:bold;">IELTS 雅思模擬考</div>
-                    <div style="font-size:0.75rem; color:var(--text-sub); margin-top:5px; display:flex; justify-content:space-between;">
-                        <span>當前等級進度</span> <span id="exp-ielts-text">0 / 20 (0%)</span>
-                    </div>
-                    <div class="prog-bar-wrap" style="height:4px; margin-top:3px;"><div class="prog-bar-fill" id="exp-ielts-fill" style="background:var(--secondary); width:0%;"></div></div>
-                </div>
-            </div>
-            <div class="path-lesson" onclick="startExplore('海外生存必備')">
-                <div style="font-size:1.8rem;">🌍</div>
-                <div style="flex:1;">
-                    <div style="font-weight:bold;">海外生存必備</div>
-                    <div style="font-size:0.75rem; color:var(--text-sub); margin-top:5px; display:flex; justify-content:space-between;">
-                        <span>當前等級進度</span> <span id="exp-daily-text">0 / 20 (0%)</span>
-                    </div>
-                    <div class="prog-bar-wrap" style="height:4px; margin-top:3px;"><div class="prog-bar-fill" id="exp-daily-fill" style="background:var(--secondary); width:0%;"></div></div>
-                </div>
-            </div>
+        
+        <div class="explore-cat-header">
+            <div class="explore-cat-title">健康與生活</div>
+        </div>
+        <div class="explore-grid">
+            <div class="explore-card" onclick="startExplore('健康飲食')"><span class="sparkle">✦</span><div class="explore-icon">🥕</div><div class="explore-title">健康飲食</div></div>
+            <div class="explore-card" onclick="startExplore('做家事')"><span class="sparkle">✦</span><div class="explore-icon">🧹</div><div class="explore-title">做家事</div></div>
+            <div class="explore-card" onclick="startExplore('購物超市')"><span class="sparkle">✦</span><div class="explore-icon">🛒</div><div class="explore-title">購物超市</div></div>
+            <div class="explore-card" onclick="startExplore('家庭成員')"><span class="sparkle">✦</span><div class="explore-icon">👨‍👩‍👧‍👦</div><div class="explore-title">家庭成員</div></div>
+        </div>
+
+        <div class="explore-cat-header">
+            <div class="explore-cat-title">社交與情感</div>
+        </div>
+        <div class="explore-grid">
+            <div class="explore-card" onclick="startExplore('基本問候')"><span class="sparkle">✦</span><div class="explore-icon">👋</div><div class="explore-title">基本問候</div></div>
+            <div class="explore-card" onclick="startExplore('約會標準')"><span class="sparkle">✦</span><div class="explore-icon">✅</div><div class="explore-title">約會標準</div></div>
+            <div class="explore-card" onclick="startExplore('表達開心')"><span class="sparkle">✦</span><div class="explore-icon">😄</div><div class="explore-title">表達開心</div></div>
+            <div class="explore-card" onclick="startExplore('安慰他人')"><span class="sparkle">✦</span><div class="explore-icon">🥺</div><div class="explore-title">安慰他人</div></div>
+        </div>
+
+        <div class="explore-cat-header">
+            <div class="explore-cat-title">職場與求職</div>
+        </div>
+        <div class="explore-grid">
+            <div class="explore-card" onclick="startExplore('面試準備')"><span class="sparkle">✦</span><div class="explore-icon">💼</div><div class="explore-title">面試準備</div></div>
+            <div class="explore-card" onclick="startExplore('與老闆開會')"><span class="sparkle">✦</span><div class="explore-icon">👨‍💼</div><div class="explore-title">與老闆開會</div></div>
+            <div class="explore-card" onclick="startExplore('時間管理')"><span class="sparkle">✦</span><div class="explore-icon">⏳</div><div class="explore-title">時間管理</div></div>
+            <div class="explore-card" onclick="startExplore('人資電訪')"><span class="sparkle">✦</span><div class="explore-icon">📞</div><div class="explore-title">人資電訪</div></div>
+        </div>
+        
+        <div class="explore-cat-header">
+            <div class="explore-cat-title">雅思托福必備</div>
+        </div>
+        <div class="explore-grid" style="margin-bottom: 20px;">
+            <div class="explore-card" onclick="startExplore('描述圖片')"><span class="sparkle">✦</span><div class="explore-icon">🖼️</div><div class="explore-title">描述圖片</div></div>
+            <div class="explore-card" onclick="startExplore('表達意見')"><span class="sparkle">✦</span><div class="explore-icon">🗣️</div><div class="explore-title">表達意見</div></div>
         </div>
     </div>
 
@@ -277,7 +284,6 @@
 
     <div id="tab-progress" class="screen">
         <h2 style="margin-top:0; margin-bottom: 15px;">全方位學習進度</h2>
-        
         <div class="prog-tabs">
             <div class="prog-tab active" id="btn-prog-overview" onclick="switchProgView('overview')">個人資料</div>
             <div class="prog-tab" id="btn-prog-details" onclick="switchProgView('details')">課程明細</div>
@@ -285,16 +291,49 @@
 
         <div id="view-prog-overview">
             <div class="path-box" style="padding: 20px 15px; text-align: center;">
-                <h3 style="margin-bottom:5px; color:white;">你的熟練度</h3>
-                <p style="font-size:0.75rem; color:var(--text-sub); margin-bottom:15px;">保持下去！持續學習以解鎖剩餘的分數。</p>
-                <div class="radar-container">
-                    <canvas id="skillsRadar"></canvas>
+                <h3 style="margin-bottom:20px; color:white;">能力熟練度</h3>
+                <div class="circle-grid">
+                    <div class="circle-item">
+                        <div class="label">發音</div>
+                        <svg viewBox="0 0 36 36" class="circular-chart pron">
+                            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path class="circle" id="circ-pron" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <text x="18" y="20.35" class="percentage" id="pct-pron">0%</text>
+                        </svg>
+                    </div>
+                    <div class="circle-item">
+                        <div class="label">詞彙</div>
+                        <svg viewBox="0 0 36 36" class="circular-chart voc">
+                            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path class="circle" id="circ-voc" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <text x="18" y="20.35" class="percentage" id="pct-voc">0%</text>
+                        </svg>
+                    </div>
+                    <div class="circle-item">
+                        <div class="label">流暢</div>
+                        <svg viewBox="0 0 36 36" class="circular-chart flu">
+                            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path class="circle" id="circ-flu" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <text x="18" y="20.35" class="percentage" id="pct-flu">0%</text>
+                        </svg>
+                    </div>
+                    <div class="circle-item">
+                        <div class="label">語調</div>
+                        <svg viewBox="0 0 36 36" class="circular-chart int">
+                            <path class="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path class="circle" id="circ-int" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <text x="18" y="20.35" class="percentage" id="pct-int">0%</text>
+                        </svg>
+                    </div>
                 </div>
-                <p style="font-size:0.75rem; color:var(--text-sub); margin-top:15px;">你的分數大約在 15 堂課後解鎖更精準的分析</p>
+                <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:10px; font-size:0.75rem; color:var(--text-sub); text-align:left; display:flex; gap:10px; align-items:center;">
+                    <span style="font-size:1.5rem;">⏳</span>
+                    <div>保持下去！你的分數大約在 15 堂課後解鎖更精準的分析。</div>
+                </div>
                 <button class="primary-btn" onclick="switchTab('dashboard')">前往課程</button>
             </div>
 
-            <h3 style="margin: 20px 0 10px 0; font-size:1.1rem;">活動 <span style="font-size:0.8rem; color:var(--text-sub); font-weight:normal;">所有時間</span></h3>
+            <h3 style="margin: 20px 0 10px 0; font-size:1.1rem;">活動</h3>
             <div class="stat-grid">
                 <div class="stat-card">
                     <div class="stat-val" id="ui-study-time">0m</div>
@@ -308,18 +347,7 @@
         </div>
 
         <div id="view-prog-details" style="display:none;">
-            <div class="acc-item">
-                <div class="acc-header open" onclick="toggleAccordion(this)"><span>📚 課程完成度 (10課/級)</span><span class="arrow">▼</span></div>
-                <div class="acc-body" id="prog-lessons-container" style="display:block;"></div>
-            </div>
-            <div class="acc-item">
-                <div class="acc-header open" onclick="toggleAccordion(this)"><span>🧭 探索特訓單元 (20回/級)</span><span class="arrow">▼</span></div>
-                <div class="acc-body" id="prog-explore-container" style="display:block;"></div>
-            </div>
-            <div class="acc-item">
-                <div class="acc-header open" onclick="toggleAccordion(this)"><span>📖 單字與發音掌握 (2000字/類)</span><span class="arrow">▼</span></div>
-                <div class="acc-body" id="prog-words-container" style="background:var(--bg-card); padding:15px; border-radius:10px; display:block;"></div>
-            </div>
+            <div class="acc-item"><div class="acc-header open" onclick="toggleAccordion(this)"><span>📚 課程完成度</span><span class="arrow">▼</span></div><div class="acc-body" id="prog-lessons-container" style="display:block;"></div></div>
         </div>
     </div>
 
@@ -351,7 +379,6 @@
 </div>
 
 <script>
-    // --- 音效系統 ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playUIFeedbackSound(isCorrect) {
         if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -359,47 +386,26 @@
         const gainNode = audioCtx.createGain();
         osc.connect(gainNode);
         gainNode.connect(audioCtx.destination);
-        
         if (isCorrect) {
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
-            osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.1);
-            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.3);
+            osc.type = 'sine'; osc.frequency.setValueAtTime(880, audioCtx.currentTime); osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.1);
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
         } else {
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(250, audioCtx.currentTime);
-            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.4);
+            osc.type = 'sawtooth'; osc.frequency.setValueAtTime(250, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime); gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.4);
         }
     }
 
-    // --- 全局變數與設定 (加入活動統計) ---
     const MAX_LESSONS = 10, MAX_WORDS = 2000, MAX_EXPLORE = 20;
     const learnTopics = ['科技電腦', '商務職場', '旅遊通關', '日常社交'];
-    const expTopics = ['TOEIC 口說衝刺', 'IELTS 雅思模擬考', '海外生存必備'];
-    
     let globalVoice = 'en-US-AvaNeural'; 
-    const currentVersion = "otterProgressV11"; 
+    const currentVersion = "otterProgressV12"; 
     let userData = JSON.parse(localStorage.getItem(currentVersion));
     
     if (!userData || !userData.stats) {
-        let oldData = userData || { lessons: {}, words: {}, explore: {} };
-        userData = { 
-            lessons: oldData.lessons || {}, words: oldData.words || {}, explore: oldData.explore || {},
-            stats: { studyTimeSec: 0, completedCourses: 0 } // 新增活動統計
-        };
-        learnTopics.forEach(t => { 
-            if(!userData.lessons[t]) userData.lessons[t] = {'Beginner':0, 'Intermediate':0, 'Advanced':0}; 
-            if(userData.words[t] === undefined) userData.words[t] = 0; 
-        });
-        expTopics.forEach(t => { 
-            if(!userData.explore[t]) userData.explore[t] = {'Beginner':0, 'Intermediate':0, 'Advanced':0}; 
-        });
+        userData = { lessons: {}, words: {}, explore: {}, stats: { studyTimeSec: 0, completedCourses: 0 } };
+        learnTopics.forEach(t => { userData.lessons[t] = {'Beginner':0, 'Intermediate':0, 'Advanced':0}; userData.words[t] = 0; });
         localStorage.setItem(currentVersion, JSON.stringify(userData));
     }
 
@@ -410,61 +416,11 @@
     let chatHistory = JSON.parse(localStorage.getItem('otterHistoryProMax')) || [];
     let currentSessionId = null; let previousTab = 'dashboard';
     const chatLog = document.getElementById('chatLog');
-    let isEditMode = false; 
-    
-    // 學習計時器
-    let studyTimer = null;
+    let isEditMode = false; let studyTimer = null;
 
     const dbTopicMap = { '科技電腦': 'tech', '商務職場': 'business', '旅遊通關': 'travel', '日常社交': 'daily' };
     const dbLevelMap = { 'Beginner': 'beginner', 'Intermediate': 'intermediate', 'Advanced': 'advanced' };
 
-    // --- 雷達圖初始化 ---
-    let radarChartInstance = null;
-    function initRadarChart() {
-        const ctx = document.getElementById('skillsRadar').getContext('2d');
-        if(radarChartInstance) radarChartInstance.destroy();
-        
-        // 模擬數據 (實務上可依據 userData 計算)
-        let totalWords = Object.values(userData.words).reduce((a,b)=>a+b, 0);
-        let completed = userData.stats.completedCourses;
-        let pPron = Math.min(100, 30 + (totalWords * 2));
-        let pVoc = Math.min(100, 40 + (totalWords * 1.5));
-        let pGra = Math.min(100, 25 + (completed * 5));
-        let pFlu = Math.min(100, 30 + (completed * 8));
-        let pInt = Math.min(100, 35 + (completed * 4));
-
-        Chart.defaults.color = '#A0A0B5';
-        radarChartInstance = new Chart(ctx, {
-            type: 'radar',
-            data: {
-                labels: ['發音', '流暢', '語調', '語法', '詞彙'],
-                datasets: [{
-                    label: '熟練度',
-                    data: [pPron, pFlu, pInt, pGra, pVoc],
-                    backgroundColor: 'rgba(77, 162, 255, 0.4)',
-                    borderColor: '#4DA2FF',
-                    pointBackgroundColor: '#7C4DFF',
-                    pointBorderColor: '#fff',
-                    pointHoverBackgroundColor: '#fff',
-                    pointHoverBorderColor: '#7C4DFF',
-                    borderWidth: 2,
-                }]
-            },
-            options: {
-                scales: {
-                    r: {
-                        angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
-                        grid: { color: 'rgba(255, 255, 255, 0.1)' },
-                        pointLabels: { font: { size: 12, family: 'Inter' } },
-                        ticks: { display: false, min: 0, max: 100 }
-                    }
-                },
-                plugins: { legend: { display: false } }
-            }
-        });
-    }
-
-    // --- 介面控制 ---
     function switchTab(tabId) {
         if(tabId !== 'chat') previousTab = tabId;
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -472,25 +428,18 @@
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         const map = {'dashboard':0, 'explore':1, 'coach':3, 'progress':4};
         if(map[tabId] !== undefined) document.querySelectorAll('.nav-item')[map[tabId]].classList.add('active');
-        
         document.getElementById('topNav').style.display = (tabId === 'chat') ? 'none' : 'flex';
         closeSidebar();
         
-        // 計時器邏輯：只有在 chat 畫面才計時
-        if(tabId === 'chat') {
-            if(!studyTimer) studyTimer = setInterval(() => { userData.stats.studyTimeSec++; }, 1000);
-        } else {
-            if(studyTimer) { clearInterval(studyTimer); studyTimer = null; saveUserData(); }
-        }
+        if(tabId === 'chat') { if(!studyTimer) studyTimer = setInterval(() => { userData.stats.studyTimeSec++; }, 1000); } 
+        else { if(studyTimer) { clearInterval(studyTimer); studyTimer = null; saveUserData(); } }
 
         if(tabId === 'dashboard') updateDashboardProgress();
-        if(tabId === 'explore') updateExploreMiniStats();
-        if(tabId === 'progress') { updateProgressUI(); initRadarChart(); }
+        if(tabId === 'progress') updateProgressUI(); 
     }
 
     function switchProgView(viewId) {
-        document.getElementById('btn-prog-overview').classList.remove('active');
-        document.getElementById('btn-prog-details').classList.remove('active');
+        document.getElementById('btn-prog-overview').classList.remove('active'); document.getElementById('btn-prog-details').classList.remove('active');
         document.getElementById('btn-prog-' + viewId).classList.add('active');
         document.getElementById('view-prog-overview').style.display = viewId === 'overview' ? 'block' : 'none';
         document.getElementById('view-prog-details').style.display = viewId === 'details' ? 'block' : 'none';
@@ -504,7 +453,7 @@
         document.querySelectorAll(`.lvl-btn[data-lvl="${lvl}"]`).forEach(btn => btn.classList.add('active'));
         const lvlMap = {'Beginner':'初級 A1','Intermediate':'中級 B1','Advanced':'高級 C1'};
         document.getElementById('topDisplay').innerText = `${lvlMap[lvl]} · 🔥 2`;
-        renderLessons(); updateDashboardProgress(); updateExploreMiniStats();
+        renderLessons(); updateDashboardProgress(); 
     }
 
     function setTopic(topic) {
@@ -532,7 +481,6 @@
         const container = document.getElementById('lessonList'); container.innerHTML = '';
         const lessonTitles = ["基礎概念與單字", "常用句型練習", "情境對話 (一)", "文法與時態", "聽力理解挑戰", "情境對話 (二)", "進階詞彙應用", "流暢度與語氣", "綜合情境實戰", "最終驗收測驗"];
         const completedLessons = userData.lessons[currentTopic][userLevel] || 0;
-        
         for(let i=1; i<=10; i++) {
             let isCompleted = completedLessons >= i;
             let numStyle = isCompleted ? "completed" : "";
@@ -543,25 +491,12 @@
                         <div style="font-weight:bold;">第 ${i} 課 - ${lessonTitles[i-1]}</div>
                         <div style="font-size:0.8rem; color:var(--text-sub);">目標: 50 回合對話</div>
                     </div>
-                </div>
-            `;
+                </div>`;
         }
     }
 
-    function toggleAccordion(el) {
-        el.classList.toggle('open');
-        const body = el.nextElementSibling;
-        body.style.display = el.classList.contains('open') ? 'block' : 'none';
-    }
-
-    function getShortName(topic, lvl, lesson) {
-        const lvlMap = {'Beginner':'初', 'Intermediate':'中', 'Advanced':'高'};
-        const tMap = {'科技電腦':'科技', '商務職場':'商務', '旅遊通關':'旅遊', '日常社交':'日常', 'TOEIC 口說衝刺':'TOEIC', 'IELTS 雅思模擬考':'IELTS', '海外生存必備':'海外'};
-        let shortT = tMap[topic] || topic.substring(0,2);
-        let shortL = lvlMap[lvl] || lvl;
-        if (lesson) return `${shortT}/${shortL}/${lesson}`;
-        return `${shortT}/${shortL}`;
-    }
+    function toggleAccordion(el) { el.classList.toggle('open'); const body = el.nextElementSibling; body.style.display = el.classList.contains('open') ? 'block' : 'none'; }
+    function getShortName(topic, lvl, lesson) { return lesson ? `${topic.substring(0,2)}/${lvl[0]}/${lesson}` : `${topic.substring(0,2)}/${lvl[0]}`; }
 
     function createNewChat(cat, titleStr, configKey) {
         closeSidebar(); currentCategory = cat; currentSessionId = Date.now().toString();
@@ -594,10 +529,8 @@
         }
         const sHeader = document.getElementById('sessionHeader');
         if (currentCategory === 'Learn' && session.title.includes('/')) {
-            sHeader.style.display = 'block';
-            let pct = Math.min(100, Math.round((sessionTurns / MAX_TURNS) * 100));
-            document.getElementById('sessionProgFill').style.width = `${pct}%`;
-            document.getElementById('sessionTurnText').innerText = `${sessionTurns} / ${MAX_TURNS} (${pct}%)`;
+            sHeader.style.display = 'block'; let pct = Math.min(100, Math.round((sessionTurns / MAX_TURNS) * 100));
+            document.getElementById('sessionProgFill').style.width = `${pct}%`; document.getElementById('sessionTurnText').innerText = `${sessionTurns} / ${MAX_TURNS} (${pct}%)`;
         } else { sHeader.style.display = 'none'; }
         switchTab('chat');
     }
@@ -605,17 +538,13 @@
     function renameChat(e, id) { e.stopPropagation(); const newName = prompt("重新命名標題："); if(newName) { const s = chatHistory.find(h => h.id === id); if(s) { s.title = newName; localStorage.setItem('otterHistoryProMax', JSON.stringify(chatHistory)); renderSidebar(); } } }
     
     function toggleEditHistory() {
-        isEditMode = !isEditMode;
-        const scrollArea = document.getElementById('sidebarScroll');
-        document.getElementById('editHistBtn').innerText = isEditMode ? "取消" : "✏️編輯";
-        if(isEditMode) scrollArea.classList.add('edit-mode');
-        else scrollArea.classList.remove('edit-mode');
-        renderSidebar();
+        isEditMode = !isEditMode; const scrollArea = document.getElementById('sidebarScroll'); document.getElementById('editHistBtn').innerText = isEditMode ? "取消" : "✏️編輯";
+        if(isEditMode) scrollArea.classList.add('edit-mode'); else scrollArea.classList.remove('edit-mode'); renderSidebar();
     }
     
     function bulkDeleteHistory() {
         const checkboxes = document.querySelectorAll('.hist-checkbox:checked');
-        if(checkboxes.length === 0) { alert("請先勾選要刪除的項目"); return; }
+        if(checkboxes.length === 0) return;
         if(confirm(`確定刪除這 ${checkboxes.length} 筆紀錄嗎？`)) {
             const idsToDelete = Array.from(checkboxes).map(cb => cb.value);
             chatHistory = chatHistory.filter(h => !idsToDelete.includes(h.id));
@@ -633,9 +562,7 @@
                 <div class="history-item ${h.id === currentSessionId ? 'active' : ''}" onclick="loadChat('${h.id}')">
                     <input type="checkbox" class="hist-checkbox" value="${h.id}" onclick="event.stopPropagation()">
                     <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">💬 ${h.title}</span>
-                    <div class="action-btns">
-                        <span class="action-btn" onclick="renameChat(event, '${h.id}')">✏️</span>
-                    </div>
+                    <div class="action-btns"><span class="action-btn" onclick="renameChat(event, '${h.id}')">✏️</span></div>
                 </div>`;
             });
         };
@@ -668,35 +595,21 @@
         let title = `發音/${getShortName(currentTopic, userLevel, '')}`;
 
         let existingSession = chatHistory.find(h => h.configKey === configKey);
-        if (existingSession) { 
-            loadChat(existingSession.id); 
-        } else { 
-            createNewChat("Learn", title, configKey); 
-            await fetchWordsFromDB();
-        }
+        if (existingSession) { loadChat(existingSession.id); } 
+        else { createNewChat("Learn", title, configKey); await fetchWordsFromDB(); }
     }
 
     async function fetchWordsFromDB() {
         document.getElementById('chatTitle').innerText = "⏳ 連接單字庫...";
-        const tStr = dbTopicMap[currentTopic] || 'tech';
-        const lStr = dbLevelMap[userLevel] || 'beginner';
+        const tStr = dbTopicMap[currentTopic] || 'tech'; const lStr = dbLevelMap[userLevel] || 'beginner';
         const collectionName = `${tStr}_${lStr}`; 
 
         try {
             const response = await fetch(`/api/words?collection=${collectionName}`);
             const data = await response.json();
-            
-            if (data.words && data.words.length > 0) {
-                currentWordList = data.words;
-                loadNextPronWord();
-            } else {
-                appendMsg("System", `❌ 找不到單字庫 <b>${collectionName}</b>，請確認已同步。`, "ai");
-                document.getElementById('chatTitle').innerText = "載入失敗";
-            }
-        } catch (error) {
-            appendMsg("System", "❌ 無法連接伺服器，請檢查後端。", "ai");
-            document.getElementById('chatTitle').innerText = "連線錯誤";
-        }
+            if (data.words && data.words.length > 0) { currentWordList = data.words; loadNextPronWord(); } 
+            else { appendMsg("System", `❌ 找不到單字庫 <b>${collectionName}</b>`, "ai"); }
+        } catch (error) { appendMsg("System", "❌ 無法連接伺服器", "ai"); }
     }
 
     function loadNextPronWord() {
@@ -718,9 +631,7 @@
         </div>`;
         
         playAudio(`/api/tts?text=${encodeURIComponent(wordData.word)}&voice=${globalVoice}`);
-        chatLog.scrollTop = chatLog.scrollHeight; 
-        saveHistory();
-        document.getElementById('chatTitle').innerText = "Ready";
+        chatLog.scrollTop = chatLog.scrollHeight; saveHistory(); document.getElementById('chatTitle').innerText = "Ready";
     }
 
     const recordBtn = document.getElementById('recordBtn');
@@ -730,7 +641,6 @@
         e.preventDefault(); if (isRecording) return;
         if(activeAudio) { activeAudio.pause(); activeAudio = null; } 
         if(!document.getElementById('tab-chat').classList.contains('active')) switchTab('chat');
-
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
             mediaRecorder = new MediaRecorder(stream); audioChunks = [];
@@ -753,148 +663,94 @@
         document.getElementById('chatTitle').innerText = "⏳ 辨識中...";
         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
         const formData = new FormData(); formData.append('file', audioBlob, 'audio.webm');
-
-        let sttContext = currentScenario === 'Pronunciation_Eval' ? targetPronWord : currentTopic;
-        formData.append('context_word', sttContext);
+        formData.append('context_word', currentScenario === 'Pronunciation_Eval' ? targetPronWord : currentTopic);
         formData.append('scenario', currentScenario);
 
         try {
             const sttRes = await fetch('/api/transcribe', { method: 'POST', body: formData });
             const sttData = await sttRes.json();
-            
-            if (!sttData.text || sttData.error === "silent") { 
-                document.getElementById('chatTitle').innerText = "⚠️ 請重新發音 (未偵測到聲音)"; return; 
-            }
+            if (!sttData.text || sttData.error === "silent") { document.getElementById('chatTitle').innerText = "⚠️ 請重新發音"; return; }
             
             appendMsg("You", sttData.text, "user");
-            
             const currentSession = chatHistory.find(h => h.id === currentSessionId);
-            if(currentSession && !currentSession.messages) currentSession.messages = [];
-            if(currentSession) currentSession.messages.push({"role": "user", "content": sttData.text});
-
+            if(currentSession) { if(!currentSession.messages) currentSession.messages = []; currentSession.messages.push({"role": "user", "content": sttData.text}); }
             document.getElementById('chatTitle').innerText = "🤔 思考中...";
 
             const res = await fetch('/api/chat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    message: sttData.text, 
-                    scenario: currentScenario, 
-                    level: userLevel, 
-                    topic: currentTopic, 
-                    target_word: targetPronWord, 
-                    lesson_num: currentLessonNum,
-                    history: currentSession ? currentSession.messages : []
-                })
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: sttData.text, scenario: currentScenario, level: userLevel, topic: currentTopic, target_word: targetPronWord, lesson_num: currentLessonNum, history: currentSession ? currentSession.messages : [] })
             });
             const data = await res.json();
-            
             if(currentSession) currentSession.messages.push({"role": "assistant", "content": data.reply});
 
             if (currentScenario === 'Pronunciation_Eval') {
                 const pronHtml = data.feedback ? data.feedback.pron_html : data.reply;
                 const isCorrect = data.feedback ? data.feedback.is_correct : false;
-                
                 playUIFeedbackSound(isCorrect);
-                
                 chatLog.innerHTML += `
                 <div class="elsa-card" style="border: 2px solid ${isCorrect ? 'var(--success)' : 'var(--accent)'};">
                     <div style="font-size:0.8rem; color:${isCorrect ? 'var(--success)' : 'var(--accent)'}; font-weight:bold;">${isCorrect ? '✅ 完美發音' : '❌ 需要調整'}</div>
                     <div style="font-size:1.8rem; font-weight:bold; margin:10px 0; color:#100C20;">${pronHtml}</div>
                 </div>`;
-                
-                if(isCorrect) { 
-                    userData.words[currentTopic] = Math.min((userData.words[currentTopic]||0) + 1, MAX_WORDS);
-                    saveUserData();  
-                    setTimeout(() => { loadNextPronWord(); }, 1500); 
-                }
+                if(isCorrect) { userData.words[currentTopic] = Math.min((userData.words[currentTopic]||0) + 1, MAX_WORDS); saveUserData(); setTimeout(() => { loadNextPronWord(); }, 1500); }
             } else {
                 appendMsg("Coach", data.reply, "ai", data.translation);
-                
                 if (currentScenario === 'Path' || currentScenario === 'Explore') {
                     sessionTurns++;
                     let pct = Math.min(100, Math.round((sessionTurns / MAX_TURNS) * 100));
-                    document.getElementById('sessionProgFill').style.width = `${pct}%`;
-                    document.getElementById('sessionTurnText').innerText = `${sessionTurns} / ${MAX_TURNS} (${pct}%)`;
-                    
+                    document.getElementById('sessionProgFill').style.width = `${pct}%`; document.getElementById('sessionTurnText').innerText = `${sessionTurns} / ${MAX_TURNS} (${pct}%)`;
                     if (sessionTurns === MAX_TURNS) {
                         setTimeout(() => {
-                            chatLog.innerHTML += `<div class="elsa-card"><div style="color:var(--success); font-weight:bold; font-size:1.2rem;">🎉 恭喜！本堂課程已完成 100%</div></div>`;
-                            if(currentScenario === 'Path') { 
-                                userData.lessons[currentTopic][userLevel] = Math.min(Math.max((userData.lessons[currentTopic][userLevel]||0), currentLessonNum), MAX_LESSONS); 
-                                userData.stats.completedCourses++; // 完成課程數+1
-                                renderLessons(); 
-                            } 
-                            else if (currentScenario === 'Explore') { 
-                                userData.explore[currentExploreTopic][userLevel] = Math.min((userData.explore[currentExploreTopic][userLevel]||0) + 1, MAX_EXPLORE);
-                                userData.stats.completedCourses++; 
-                            }
+                            chatLog.innerHTML += `<div class="elsa-card"><div style="color:var(--success); font-weight:bold; font-size:1.2rem;">🎉 恭喜完成！</div></div>`;
+                            if(currentScenario === 'Path') { userData.lessons[currentTopic][userLevel] = Math.min(Math.max((userData.lessons[currentTopic][userLevel]||0), currentLessonNum), MAX_LESSONS); userData.stats.completedCourses++; renderLessons(); } 
+                            else if (currentScenario === 'Explore') { userData.stats.completedCourses++; }
                             saveUserData(); chatLog.scrollTop = chatLog.scrollHeight; saveHistory();
                         }, 1000);
                     }
                 }
             }
-
             if(currentScenario !== 'Pronunciation_Eval' || !data.feedback.is_correct) { playAudio(`/api/tts?text=${encodeURIComponent(data.reply)}&voice=${globalVoice}`); }
-            document.getElementById('chatTitle').innerText = "Ready";
-            chatLog.scrollTop = chatLog.scrollHeight; saveHistory();
+            document.getElementById('chatTitle').innerText = "Ready"; chatLog.scrollTop = chatLog.scrollHeight; saveHistory();
         } catch (e) { document.getElementById('chatTitle').innerText = "網路錯誤"; }
     }
 
-    function appendMsg(s, t, c, tr = null) {
-        const d = document.createElement('div'); d.className = `bubble ${c}`; d.innerHTML = `<b>${s}</b><br>${t}${tr ? `<div class="trans">${tr}</div>` : ''}`;
-        chatLog.appendChild(d); chatLog.scrollTop = chatLog.scrollHeight; saveHistory();
-    }
-
+    function appendMsg(s, t, c, tr = null) { const d = document.createElement('div'); d.className = `bubble ${c}`; d.innerHTML = `<b>${s}</b><br>${t}${tr ? `<div class="trans">${tr}</div>` : ''}`; chatLog.appendChild(d); chatLog.scrollTop = chatLog.scrollHeight; saveHistory(); }
     function saveUserData() { localStorage.setItem(currentVersion, JSON.stringify(userData)); }
-    
-    function updateExploreMiniStats() {
-        const getPct = (key) => { let val = userData.explore[key][userLevel] || 0; return { val: val, pct: Math.round((val/MAX_EXPLORE)*100) }; };
-        let toeic = getPct('TOEIC 口說衝刺'), ielts = getPct('IELTS 雅思模擬考'), daily = getPct('海外生存必備');
-        document.getElementById('exp-toeic-text').innerText = `${toeic.val} / ${MAX_EXPLORE} (${toeic.pct}%)`; document.getElementById('exp-toeic-fill').style.width = `${toeic.pct}%`;
-        document.getElementById('exp-ielts-text').innerText = `${ielts.val} / ${MAX_EXPLORE} (${ielts.pct}%)`; document.getElementById('exp-ielts-fill').style.width = `${ielts.pct}%`;
-        document.getElementById('exp-daily-text').innerText = `${daily.val} / ${MAX_EXPLORE} (${daily.pct}%)`; document.getElementById('exp-daily-fill').style.width = `${daily.pct}%`;
-    }
 
+    // 圓形進度圖更新
     function updateProgressUI() {
-        // 更新活動卡片數字
         let studyMins = Math.ceil((userData.stats.studyTimeSec || 0) / 60);
         document.getElementById('ui-study-time').innerText = studyMins + 'm';
         document.getElementById('ui-completed-courses').innerText = userData.stats.completedCourses || 0;
 
-        const levels = ['Beginner', 'Intermediate', 'Advanced'];
-        const levelLabels = {'Beginner': '初級 A1', 'Intermediate': '中級 B1', 'Advanced': '高級 C1'};
-        const colors = ['#4DA2FF', '#7C4DFF', '#00E676'];
+        let totalWords = Object.values(userData.words).reduce((a,b)=>a+b, 0);
+        let completed = userData.stats.completedCourses;
+        let pPron = Math.min(100, Math.floor((totalWords / (MAX_WORDS*4)) * 100) + 10);
+        let pVoc = Math.min(100, Math.floor((totalWords / (MAX_WORDS*4)) * 100));
+        let pGra = Math.min(100, Math.floor((completed / (MAX_LESSONS*4)) * 100) + 5);
+        let pFlu = Math.min(100, Math.floor((completed / (MAX_LESSONS*4)) * 100) + 15);
 
+        document.getElementById('circ-pron').style.strokeDasharray = `${pPron}, 100`; document.getElementById('pct-pron').innerText = `${pPron}%`;
+        document.getElementById('circ-voc').style.strokeDasharray = `${pVoc}, 100`; document.getElementById('pct-voc').innerText = `${pVoc}%`;
+        document.getElementById('circ-flu').style.strokeDasharray = `${pFlu}, 100`; document.getElementById('pct-flu').innerText = `${pFlu}%`;
+        document.getElementById('circ-int').style.strokeDasharray = `${pGra}, 100`; document.getElementById('pct-int').innerText = `${pGra}%`;
+
+        const levels = ['Beginner', 'Intermediate', 'Advanced'];
         const buildNestedBars = (topicArray, dataObj, maxVal, containerId) => {
             const container = document.getElementById(containerId); container.innerHTML = '';
             topicArray.forEach(topic => {
                 let subHtml = '';
-                levels.forEach((lvl, idx) => {
-                    let val = dataObj[topic][lvl] || 0;
-                    let pct = Math.min(100, Math.round((val / maxVal) * 100));
-                    subHtml += `<div class="prog-row"><div class="prog-label">${levelLabels[lvl]}</div><div class="prog-bar-wrap"><div class="prog-bar-fill" style="width: ${pct}%; background: ${colors[idx]};"></div></div><div class="prog-pct" style="color:${colors[idx]};">${val}/${maxVal} <span style="color:var(--text-sub);">(${pct}%)</span></div></div>`;
+                levels.forEach(lvl => {
+                    let val = dataObj[topic] ? (dataObj[topic][lvl] || 0) : 0; let pct = Math.min(100, Math.round((val / maxVal) * 100));
+                    subHtml += `<div class="prog-row"><div class="prog-label">${lvl.substring(0,3)}</div><div class="prog-bar-wrap"><div class="prog-bar-fill" style="width: ${pct}%; background: var(--primary);"></div></div><div class="prog-pct">${val}/${maxVal}</div></div>`;
                 });
                 container.innerHTML += `<div class="sub-acc-header open" onclick="toggleAccordion(this)"><span>${topic}</span><span class="arrow">▼</span></div><div class="sub-acc-body" style="display:block;">${subHtml}</div>`;
             });
         };
-
-        const buildFlatBars = (topicArray, dataObj, maxVal, containerId, clrs) => {
-            const container = document.getElementById(containerId); container.innerHTML = '';
-            topicArray.forEach((topic, idx) => {
-                let val = dataObj[topic] || 0;
-                let pct = Math.min(100, Math.round((val / maxVal) * 100));
-                let color = clrs[idx % clrs.length];
-                container.innerHTML += `<div class="prog-row"><div class="prog-label">${topic}</div><div class="prog-bar-wrap"><div class="prog-bar-fill" style="width: ${pct}%; background: ${color};"></div></div><div class="prog-pct" style="color:${color};">${val}/${maxVal} <span style="color:var(--text-sub);">(${pct}%)</span></div></div>`;
-            });
-        };
-
         buildNestedBars(learnTopics, userData.lessons, MAX_LESSONS, 'prog-lessons-container');
-        buildNestedBars(expTopics, userData.explore, MAX_EXPLORE, 'prog-explore-container');
-        buildFlatBars(learnTopics, userData.words, MAX_WORDS, 'prog-words-container', ['#FF5252', '#FF4081', '#E040FB', '#7C4DFF']);
     }
 
-    renderSidebar(); renderLessons(); updateDashboardProgress(); updateExploreMiniStats();
+    renderSidebar(); renderLessons(); updateDashboardProgress(); 
 </script>
 </body>
 </html>
