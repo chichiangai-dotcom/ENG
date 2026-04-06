@@ -2,3 +2,4 @@ flask
 flask-cors
 groq
 edge-tts
+pymongo
