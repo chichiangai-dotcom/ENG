@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AI Coach Pro - Enhanced UI</title>
+    <title>AI Coach Pro - Ultimate Explore</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { 
             --bg-dark: #0D0914; --bg-card: #1E1A2D; --bg-card-hover: #2A253F;
@@ -15,7 +16,7 @@
         body { font-family: 'Inter', -apple-system, sans-serif; background: var(--bg-dark); color: var(--text-main); display: flex; justify-content: center; height: 100dvh; overflow: hidden; }
         .app-shell { width: 100%; max-width: 480px; height: 100%; display: flex; flex-direction: column; position: relative; background: linear-gradient(180deg, #161224 0%, var(--bg-dark) 100%); padding-bottom: env(safe-area-inset-bottom); overflow: hidden; }
 
-        /* 側邊欄與複選刪除 */
+        /* 側邊欄 */
         .sidebar { position: absolute; top: 0; left: 0; width: 280px; height: 100%; background: #16122B; z-index: 999; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
         .sidebar.active { transform: translateX(0); }
         .sb-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 998; opacity: 0; pointer-events: none; transition: 0.3s; }
@@ -53,7 +54,6 @@
         .topic-pill { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
         .topic-pill.active { background: var(--primary); color: #000; font-weight: bold; border-color: var(--primary); }
 
-        /* 卡片與內容 */
         .pronun-card { background: linear-gradient(135deg, rgba(0, 229, 255, 0.15), rgba(176, 0, 255, 0.15)); border: 1px solid var(--primary); border-radius: 15px; padding: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; cursor: pointer; transition: 0.2s; }
         .pronun-card:active { transform: scale(0.98); }
         .path-box { background: var(--bg-card); border-radius: 15px; overflow: hidden; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.03);}
@@ -63,22 +63,31 @@
         .lesson-num { width: 35px; height: 35px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; justify-content: center; align-items: center; font-weight: bold; color: var(--primary); flex-shrink: 0;}
         .lesson-num.completed { background: var(--success); color: #100C20; }
         
-        /* 探索網格系統 (全新設計) */
-        .explore-cat-header { display: flex; justify-content: space-between; align-items: center; margin: 20px 0 10px 0; }
-        .explore-cat-title { font-size: 1.1rem; font-weight: bold; }
-        .explore-cat-more { font-size: 0.75rem; color: var(--primary); cursor: pointer; }
-        .explore-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .explore-card { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.05); border-radius: 15px; padding: 15px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; }
-        .explore-card:active { transform: scale(0.95); background: rgba(255,255,255,0.05); }
-        .explore-icon { font-size: 2.2rem; }
-        .explore-title { font-size: 0.85rem; color: var(--text-main); font-weight: 500; text-align: center;}
-        .sparkle { position: absolute; top: 10px; right: 10px; color: var(--secondary); font-size: 0.8rem; }
+        /* 🔥 全新探索網格系統 🔥 */
+        .explore-cat-header { display: flex; justify-content: space-between; align-items: center; margin: 25px 0 10px 0; }
+        .explore-cat-title { font-size: 1.1rem; font-weight: bold; color: white; }
+        .explore-cat-more { font-size: 0.8rem; color: var(--primary); cursor: pointer; padding: 5px; font-weight: 500; transition: 0.2s; }
+        .explore-cat-more:active { opacity: 0.6; }
+        
+        .explore-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; transition: 0.3s; }
+        .explore-card { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.05); border-radius: 15px; padding: 18px 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; cursor: pointer; transition: 0.2s; position: relative; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.2);}
+        .explore-card:active { transform: scale(0.95); background: rgba(255,255,255,0.08); }
+        
+        /* Emoji 強化美化 (加上陰影與光暈) */
+        .explore-icon { font-size: 2.8rem; filter: drop-shadow(0px 6px 8px rgba(0,0,0,0.5)); transition: transform 0.3s; }
+        .explore-card:hover .explore-icon { transform: translateY(-3px); filter: drop-shadow(0px 8px 12px rgba(0, 229, 255, 0.3)); }
+        
+        .explore-title { font-size: 0.9rem; color: var(--text-main); font-weight: 600; text-align: center; }
+        .sparkle { position: absolute; top: 10px; right: 12px; color: var(--secondary); font-size: 0.9rem; opacity: 0.8; }
+        
+        /* 隱藏超過 4 個的卡片 */
+        .explore-card.hidden { display: none; }
 
         /* 教練選單網格 */
         .coach-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
         .coach-opt { background: var(--bg-card); padding: 15px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; cursor: pointer; border: 2px solid rgba(255,255,255,0.05); transition: 0.2s;}
         .coach-opt.active { border-color: var(--primary); background: rgba(0, 229, 255, 0.1); }
-        .coach-flag { font-size: 2rem; }
+        .coach-flag { font-size: 2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));}
         .coach-name { font-weight: bold; font-size: 0.9rem; }
         .coach-desc { font-size: 0.7rem; color: var(--text-sub); }
 
@@ -91,7 +100,6 @@
         .circle-item { display: flex; flex-direction: column; align-items: center; gap: 10px; }
         .circle-item .label { font-size: 0.85rem; font-weight: bold; color: var(--text-main); }
         
-        /* SVG 圓環樣式 */
         .circular-chart { display: block; margin: 0 auto; max-width: 100px; max-height: 100px; }
         .circle-bg { fill: none; stroke: rgba(255, 255, 255, 0.05); stroke-width: 3.5; }
         .circle { fill: none; stroke-width: 2.8; stroke-linecap: round; transition: stroke-dasharray 1s ease-out; }
@@ -176,7 +184,7 @@
         </div>
 
         <div class="pronun-card" onclick="startPronunciationSession()">
-            <div style="font-size:2.5rem;">🗣️</div>
+            <div style="font-size:2.5rem; filter: drop-shadow(0 0 5px rgba(0,229,255,0.5));">🗣️</div>
             <div style="flex:1;">
                 <div style="font-weight:bold; font-size:1.1rem; color:var(--text-main);">專屬發音特訓</div>
                 <div style="font-size:0.8rem; color:var(--text-sub); margin-top:3px;">連接單字庫</div>
@@ -206,43 +214,8 @@
             <div class="lvl-btn" data-lvl="Advanced" onclick="setLevel('Advanced')">C1 高分</div>
         </div>
         
-        <div class="explore-cat-header">
-            <div class="explore-cat-title">健康與生活</div>
-        </div>
-        <div class="explore-grid">
-            <div class="explore-card" onclick="startExplore('健康飲食')"><span class="sparkle">✦</span><div class="explore-icon">🥕</div><div class="explore-title">健康飲食</div></div>
-            <div class="explore-card" onclick="startExplore('做家事')"><span class="sparkle">✦</span><div class="explore-icon">🧹</div><div class="explore-title">做家事</div></div>
-            <div class="explore-card" onclick="startExplore('購物超市')"><span class="sparkle">✦</span><div class="explore-icon">🛒</div><div class="explore-title">購物超市</div></div>
-            <div class="explore-card" onclick="startExplore('家庭成員')"><span class="sparkle">✦</span><div class="explore-icon">👨‍👩‍👧‍👦</div><div class="explore-title">家庭成員</div></div>
-        </div>
-
-        <div class="explore-cat-header">
-            <div class="explore-cat-title">社交與情感</div>
-        </div>
-        <div class="explore-grid">
-            <div class="explore-card" onclick="startExplore('基本問候')"><span class="sparkle">✦</span><div class="explore-icon">👋</div><div class="explore-title">基本問候</div></div>
-            <div class="explore-card" onclick="startExplore('約會標準')"><span class="sparkle">✦</span><div class="explore-icon">✅</div><div class="explore-title">約會標準</div></div>
-            <div class="explore-card" onclick="startExplore('表達開心')"><span class="sparkle">✦</span><div class="explore-icon">😄</div><div class="explore-title">表達開心</div></div>
-            <div class="explore-card" onclick="startExplore('安慰他人')"><span class="sparkle">✦</span><div class="explore-icon">🥺</div><div class="explore-title">安慰他人</div></div>
-        </div>
-
-        <div class="explore-cat-header">
-            <div class="explore-cat-title">職場與求職</div>
-        </div>
-        <div class="explore-grid">
-            <div class="explore-card" onclick="startExplore('面試準備')"><span class="sparkle">✦</span><div class="explore-icon">💼</div><div class="explore-title">面試準備</div></div>
-            <div class="explore-card" onclick="startExplore('與老闆開會')"><span class="sparkle">✦</span><div class="explore-icon">👨‍💼</div><div class="explore-title">與老闆開會</div></div>
-            <div class="explore-card" onclick="startExplore('時間管理')"><span class="sparkle">✦</span><div class="explore-icon">⏳</div><div class="explore-title">時間管理</div></div>
-            <div class="explore-card" onclick="startExplore('人資電訪')"><span class="sparkle">✦</span><div class="explore-icon">📞</div><div class="explore-title">人資電訪</div></div>
-        </div>
+        <div id="explore-container"></div>
         
-        <div class="explore-cat-header">
-            <div class="explore-cat-title">雅思托福必備</div>
-        </div>
-        <div class="explore-grid" style="margin-bottom: 20px;">
-            <div class="explore-card" onclick="startExplore('描述圖片')"><span class="sparkle">✦</span><div class="explore-icon">🖼️</div><div class="explore-title">描述圖片</div></div>
-            <div class="explore-card" onclick="startExplore('表達意見')"><span class="sparkle">✦</span><div class="explore-icon">🗣️</div><div class="explore-title">表達意見</div></div>
-        </div>
     </div>
 
     <div id="tab-coach" class="screen">
@@ -347,8 +320,7 @@
         </div>
 
         <div id="view-prog-details" style="display:none;">
-            <div class="acc-item"><div class="acc-header open" onclick="toggleAccordion(this)"><span>📚 課程完成度</span><span class="arrow">▼</span></div><div class="acc-body" id="prog-lessons-container" style="display:block;"></div></div>
-        </div>
+            </div>
     </div>
 
     <div id="tab-chat" class="screen" style="padding: 0; padding-bottom: 120px;">
@@ -379,6 +351,184 @@
 </div>
 
 <script>
+    // --- 🌟 探索頁面資料庫 🌟 ---
+    const exploreData = [
+        {
+            category: "健康與生活",
+            items: [
+                { icon: "🥕", title: "健康飲食" }, { icon: "🧴", title: "護膚程序" },
+                { icon: "🏋️", title: "健身運動" }, { icon: "🧘", title: "心理健康" },
+                { icon: "🛏️", title: "睡眠習慣" }, { icon: "🏥", title: "看醫生" }
+            ]
+        },
+        {
+            category: "食品和飲料",
+            items: [
+                { icon: "🍜", title: "食物" }, { icon: "🏮", title: "年菜" },
+                { icon: "☕", title: "咖啡廳點餐" }, { icon: "🍷", title: "酒吧社交" },
+                { icon: "🧑‍🍳", title: "烹飪食譜" }, { icon: "🥗", title: "素食主義" }
+            ]
+        },
+        {
+            category: "購物",
+            items: [
+                { icon: "👟", title: "鞋店" }, { icon: "🛒", title: "雜貨店" },
+                { icon: "👕", title: "服飾退換貨" }, { icon: "💻", title: "電子產品" },
+                { icon: "🤝", title: "殺價技巧" }, { icon: "💳", title: "信用卡支付" }
+            ]
+        },
+        {
+            category: "節日",
+            items: [
+                { icon: "🧧", title: "過年計畫" }, { icon: "🐟", title: "年菜" },
+                { icon: "🎃", title: "萬聖節" }, { icon: "🎄", title: "聖誕節" },
+                { icon: "🎆", title: "跨年活動" }, { icon: "🎁", title: "送禮文化" }
+            ]
+        },
+        {
+            category: "日常生活",
+            items: [
+                { icon: "🌳", title: "居住地" }, { icon: "🧹", title: "家務" },
+                { icon: "🚌", title: "大眾運輸" }, { icon: "🚗", title: "塞車抱怨" },
+                { icon: "⛅", title: "天氣狀況" }, { icon: "🐶", title: "寵物照顧" }
+            ]
+        },
+        {
+            category: "約會和愛情",
+            items: [
+                { icon: "✅", title: "約會標準" }, { icon: "💖", title: "愛" },
+                { icon: "💐", title: "浪漫告白" }, { icon: "💔", title: "處理衝突" },
+                { icon: "💍", title: "求婚與婚姻" }, { icon: "🍷", title: "紀念日慶祝" }
+            ]
+        },
+        {
+            category: "朋友和家人",
+            items: [
+                { icon: "👨‍👩‍👧‍👦", title: "家庭成員" }, { icon: "🤱", title: "你的孩子" },
+                { icon: "🍻", title: "老友聚會" }, { icon: "🏕️", title: "家族旅行" },
+                { icon: "👵", title: "拜訪長輩" }, { icon: "🏠", title: "家鄉回憶" }
+            ]
+        },
+        {
+            category: "感情",
+            items: [
+                { icon: "😄", title: "開心" }, { icon: "😫", title: "悲傷" },
+                { icon: "😡", title: "生氣" }, { icon: "😰", title: "焦慮" },
+                { icon: "🥺", title: "同情與安慰" }, { icon: "😌", title: "鬆了一口氣" }
+            ]
+        },
+        {
+            category: "基本溝通",
+            items: [
+                { icon: "🤝", title: "介紹" }, { icon: "👋", title: "基本問候" },
+                { icon: "🙏", title: "道歉與道謝" }, { icon: "🤔", title: "請對方重複" },
+                { icon: "👍", title: "表示同意" }, { icon: "🙅", title: "委婉拒絕" }
+            ]
+        },
+        {
+            category: "體驗和活動",
+            items: [
+                { icon: "🌍", title: "旅行" }, { icon: "🏖️", title: "假期計畫" },
+                { icon: "🎤", title: "聽演唱會" }, { icon: "🏕️", title: "露營活動" },
+                { icon: "🎢", title: "遊樂園" }, { icon: "🖼️", title: "參觀博物館" }
+            ]
+        },
+        {
+            category: "商務情境",
+            items: [
+                { icon: "💼", title: "目前職業" }, { icon: "👨‍💼", title: "與老闆開會" },
+                { icon: "📊", title: "專案簡報" }, { icon: "🤝", title: "客戶談判" },
+                { icon: "📧", title: "商務郵件" }, { icon: "👔", title: "辦公室閒聊" }
+            ]
+        },
+        {
+            category: "求職",
+            items: [
+                { icon: "📞", title: "人資電訪" }, { icon: "⭐", title: "優勢與劣勢" },
+                { icon: "📄", title: "履歷討論" }, { icon: "💰", title: "薪資談判" },
+                { icon: "🏢", title: "詢問公司文化" }, { icon: "📝", title: "面試後跟進" }
+            ]
+        },
+        {
+            category: "IELTS口說練習",
+            items: [
+                { icon: "🌈", title: "顏色" }, { icon: "🧑‍🍳", title: "煮飯" },
+                { icon: "🗣️", title: "表達意見" }, { icon: "⚖️", title: "比較優劣" },
+                { icon: "🔮", title: "預測未來" }, { icon: "🖼️", title: "描述圖片" }
+            ]
+        },
+        {
+            category: "愛好",
+            items: [
+                { icon: "📚", title: "圖書" }, { icon: "🎮", title: "電子遊戲" },
+                { icon: "🎵", title: "聽音樂" }, { icon: "📸", title: "攝影" },
+                { icon: "🎨", title: "畫畫" }, { icon: "🎸", title: "彈樂器" }
+            ]
+        }
+    ];
+
+    // 動態渲染探索頁面
+    function renderExplorePage() {
+        const container = document.getElementById('explore-container');
+        container.innerHTML = '';
+        exploreData.forEach((cat, index) => {
+            // 標題與「顯示全部」按鈕
+            let header = document.createElement('div');
+            header.className = 'explore-cat-header';
+            header.innerHTML = `
+                <div class="explore-cat-title">${cat.category}</div>
+                <div class="explore-cat-more" onclick="toggleExploreCategory(${index}, this)">顯示全部 ></div>
+            `;
+            container.appendChild(header);
+
+            // 網格與卡片
+            let grid = document.createElement('div');
+            grid.className = 'explore-grid';
+            grid.id = `explore-grid-${index}`;
+            
+            cat.items.forEach((item, i) => {
+                let card = document.createElement('div');
+                // 前4個顯示，後面的隱藏
+                card.className = `explore-card ${i >= 4 ? 'hidden' : ''}`;
+                card.onclick = () => startExplore(item.title);
+                card.innerHTML = `
+                    <span class="sparkle">✦</span>
+                    <div class="explore-icon">${item.icon}</div>
+                    <div class="explore-title">${item.title}</div>
+                `;
+                grid.appendChild(card);
+            });
+            container.appendChild(grid);
+        });
+    }
+
+    // 切換顯示/隱藏卡片
+    function toggleExploreCategory(index, btnEl) {
+        const grid = document.getElementById(`explore-grid-${index}`);
+        const hiddenCards = grid.querySelectorAll('.explore-card.hidden');
+        
+        if (hiddenCards.length > 0) {
+            // 展開
+            hiddenCards.forEach(card => {
+                card.classList.remove('hidden');
+                card.dataset.toggled = 'true'; // 標記為被展開的
+            });
+            btnEl.innerText = '收起 ∧';
+        } else {
+            // 收起 (只保留前 4 個)
+            const allCards = grid.querySelectorAll('.explore-card');
+            allCards.forEach((card, i) => {
+                if (i >= 4) {
+                    card.classList.add('hidden');
+                    delete card.dataset.toggled;
+                }
+            });
+            btnEl.innerText = '顯示全部 >';
+        }
+    }
+
+
+    // --- 音效系統 ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playUIFeedbackSound(isCorrect) {
         if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -510,7 +660,7 @@
         
         sessionTurns = 0; const sHeader = document.getElementById('sessionHeader');
         if (currentScenario === 'Path' || currentScenario === 'Explore') {
-            sHeader.style.display = 'block'; document.getElementById('sessionTopicText').innerText = "課程對話任務";
+            sHeader.style.display = 'block'; document.getElementById('sessionTopicText').innerText = "對話任務";
             document.getElementById('sessionTurnText').innerText = `0 / ${MAX_TURNS} (0%)`;
             document.getElementById('sessionProgFill').style.width = '0%';
         } else { sHeader.style.display = 'none'; }
@@ -528,7 +678,7 @@
             sessionTurns = Math.floor((session.html.match(/bubble user/g) || []).length);
         }
         const sHeader = document.getElementById('sessionHeader');
-        if (currentCategory === 'Learn' && session.title.includes('/')) {
+        if (session.title.includes('/')) { // 有斜線代表是對話任務
             sHeader.style.display = 'block'; let pct = Math.min(100, Math.round((sessionTurns / MAX_TURNS) * 100));
             document.getElementById('sessionProgFill').style.width = `${pct}%`; document.getElementById('sessionTurnText').innerText = `${sessionTurns} / ${MAX_TURNS} (${pct}%)`;
         } else { sHeader.style.display = 'none'; }
@@ -574,7 +724,11 @@
     function saveHistory() { if(currentSessionId) { const s = chatHistory.find(h => h.id === currentSessionId); if(s) { s.html = chatLog.innerHTML; localStorage.setItem('otterHistoryProMax', JSON.stringify(chatHistory)); } } }
 
     function startLesson(num) { currentLessonNum = num; startChat('Path', 'Learn', currentTopic); }
-    function startExplore(topicStr) { currentExploreTopic = topicStr; startChat('Explore', 'Explore', topicStr); }
+    
+    function startExplore(topicStr) { 
+        currentExploreTopic = topicStr; 
+        startChat('Explore', 'Explore', topicStr); 
+    }
     
     function startChat(scenario, category, specTopic = null) {
         currentScenario = scenario; currentCategory = category || 'Learn';
@@ -703,7 +857,12 @@
                         setTimeout(() => {
                             chatLog.innerHTML += `<div class="elsa-card"><div style="color:var(--success); font-weight:bold; font-size:1.2rem;">🎉 恭喜完成！</div></div>`;
                             if(currentScenario === 'Path') { userData.lessons[currentTopic][userLevel] = Math.min(Math.max((userData.lessons[currentTopic][userLevel]||0), currentLessonNum), MAX_LESSONS); userData.stats.completedCourses++; renderLessons(); } 
-                            else if (currentScenario === 'Explore') { userData.stats.completedCourses++; }
+                            else if (currentScenario === 'Explore') { 
+                                // 確保探索的數據被正確儲存
+                                if(!userData.explore[currentExploreTopic]) userData.explore[currentExploreTopic] = {'Beginner':0, 'Intermediate':0, 'Advanced':0};
+                                userData.explore[currentExploreTopic][userLevel] = Math.min((userData.explore[currentExploreTopic][userLevel]||0) + 1, MAX_EXPLORE);
+                                userData.stats.completedCourses++; 
+                            }
                             saveUserData(); chatLog.scrollTop = chatLog.scrollHeight; saveHistory();
                         }, 1000);
                     }
@@ -735,6 +894,7 @@
         document.getElementById('circ-flu').style.strokeDasharray = `${pFlu}, 100`; document.getElementById('pct-flu').innerText = `${pFlu}%`;
         document.getElementById('circ-int').style.strokeDasharray = `${pGra}, 100`; document.getElementById('pct-int').innerText = `${pGra}%`;
 
+        // 動態生成課程明細
         const levels = ['Beginner', 'Intermediate', 'Advanced'];
         const buildNestedBars = (topicArray, dataObj, maxVal, containerId) => {
             const container = document.getElementById(containerId); container.innerHTML = '';
@@ -748,8 +908,26 @@
             });
         };
         buildNestedBars(learnTopics, userData.lessons, MAX_LESSONS, 'prog-lessons-container');
+        
+        // 探索單元進度 (展開你剛剛新增的所有探索類別)
+        let allExpTopics = [];
+        exploreData.forEach(cat => cat.items.forEach(item => allExpTopics.push(item.title)));
+        const expContainer = document.getElementById('prog-explore-container');
+        expContainer.innerHTML = '';
+        // 這裡只顯示前 10 個熱門探索進度，避免太長
+        allExpTopics.slice(0, 10).forEach(topic => {
+            let subHtml = '';
+            levels.forEach(lvl => {
+                let val = userData.explore[topic] ? (userData.explore[topic][lvl] || 0) : 0; 
+                let pct = Math.min(100, Math.round((val / MAX_EXPLORE) * 100));
+                subHtml += `<div class="prog-row"><div class="prog-label">${lvl.substring(0,3)}</div><div class="prog-bar-wrap"><div class="prog-bar-fill" style="width: ${pct}%; background: var(--secondary);"></div></div><div class="prog-pct">${val}/${MAX_EXPLORE}</div></div>`;
+            });
+            expContainer.innerHTML += `<div class="sub-acc-header open" onclick="toggleAccordion(this)"><span>${topic}</span><span class="arrow">▼</span></div><div class="sub-acc-body" style="display:block;">${subHtml}</div>`;
+        });
     }
 
+    // 初始化執行
+    renderExplorePage();
     renderSidebar(); renderLessons(); updateDashboardProgress(); 
 </script>
 </body>
