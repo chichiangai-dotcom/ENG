@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AI Coach Pro - Ultimate UX</title>
+    <title>AI Coach Pro - Cloud DB Edition</title>
     <style>
         :root { 
             --bg-dark: #100C20; --bg-card: #23203B; --bg-card-hover: #312E52;
             --primary: #4DA2FF; --secondary: #7C4DFF; --text-main: #FFFFFF; --text-sub: #A0A0B5; 
-            --accent: #FF5252; --success: #00E676; --otter-brown: #744A32; --otter-face: #F1D4B6;
+            --accent: #FF5252; --success: #00E676; 
         }
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-main); display: flex; justify-content: center; height: 100dvh; overflow: hidden; }
@@ -102,9 +102,6 @@
         .record-btn { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; justify-content: center; align-items: center; font-size: 1.5rem; border: none; position: absolute; top: -20px; box-shadow: 0 5px 15px rgba(77, 162, 255, 0.4); touch-action: none; z-index: 101; cursor: pointer; -webkit-user-select: none; -webkit-touch-callout: none; outline: none;}
         .record-btn.recording { background: var(--accent); animation: pulse 1s infinite; }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 82, 82, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(255, 82, 82, 0); } }
-
-        /* CSV 載入器樣式 (植入) */
-        .csv-loader { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px dashed rgba(255,255,255,0.2); }
     </style>
 </head>
 <body>
@@ -128,12 +125,6 @@
 
     <div id="tab-dashboard" class="screen active">
 
-        <div class="csv-loader">
-            <div style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 8px;">📁 載入外部單字庫 (CSV, UTF-8 BOM)</div>
-            <input type="file" id="csvFileInput" accept=".csv" style="font-size: 0.75rem; color: white; width: 100%;">
-            <div id="csvStatus" style="font-size: 0.75rem; color: var(--success); margin-top: 5px; display: none;">已載入 0 個單字</div>
-        </div>
-
         <div class="level-selector">
             <div class="lvl-btn" data-lvl="Beginner" onclick="setLevel('Beginner')">A1 初級</div>
             <div class="lvl-btn active" data-lvl="Intermediate" onclick="setLevel('Intermediate')">B1 中級</div>
@@ -150,7 +141,7 @@
             <div style="font-size:2.5rem;">🗣️</div>
             <div style="flex:1;">
                 <div style="font-weight:bold; font-size:1.1rem; color:var(--primary);">專屬發音特訓</div>
-                <div style="font-size:0.8rem; color:var(--text-sub); margin-top:3px;">精準糾錯，隨機單字庫挑戰</div>
+                <div style="font-size:0.8rem; color:var(--text-sub); margin-top:3px;">雲端題庫：隨機抽取挑戰</div>
             </div>
         </div>
 
@@ -289,30 +280,6 @@
         localStorage.setItem(currentVersion, JSON.stringify(userData));
     }
 
-    // 發音庫 (擴充字庫陣列，供隨機抽取)
-    const pronDB = {
-        '科技電腦': { 
-            'Beginner': [{w:'Mouse', ipa:'/maʊs/'}, {w:'Screen', ipa:'/skriːn/'}, {w:'Keyboard', ipa:'/ˈkiː.bɔːrd/'}, {w:'Click', ipa:'/klɪk/'}, {w:'File', ipa:'/faɪl/'}, {w:'Cable', ipa:'/ˈkeɪ.bəl/'}], 
-            'Intermediate': [{w:'Database', ipa:'/ˈdeɪ.tə.beɪs/'}, {w:'Algorithm', ipa:'/ˈæl.ɡə.rɪ.ðəm/'}, {w:'Software', ipa:'/ˈsɑːft.wer/'}, {w:'Network', ipa:'/ˈnet.wɝːk/'}, {w:'Password', ipa:'/ˈpæs.wɝːd/'}], 
-            'Advanced': [{w:'Architecture', ipa:'/ˈɑːr.kə.tek.tʃɚ/'}, {w:'Cryptography', ipa:'/krɪpˈtɑː.ɡrə.fi/'}, {w:'Vulnerability', ipa:'/ˌvʌl.nɚ.əˈbɪl.ə.t̬i/'}, {w:'Synchronization', ipa:'/sɪŋ.krə.nəˈzeɪ.ʃən/'}] 
-        },
-        '商務職場': { 
-            'Beginner': [{w:'Meeting', ipa:'/ˈmiː.t̬ɪŋ/'}, {w:'Office', ipa:'/ˈɑː.fɪs/'}, {w:'Boss', ipa:'/bɑːs/'}, {w:'Desk', ipa:'/desk/'}], 
-            'Intermediate': [{w:'Negotiation', ipa:'/nəˌɡoʊ.ʃiˈeɪ.ʃən/'}, {w:'Proposal', ipa:'/prəˈpoʊ.zəl/'}, {w:'Contract', ipa:'/ˈkɑːn.trækt/'}, {w:'Strategy', ipa:'/ˈstræt̬.ə.dʒi/'}], 
-            'Advanced': [{w:'Acquisition', ipa:'/ˌæk.wəˈzɪʃ.ən/'}, {w:'Entrepreneurship', ipa:'/ˌɑːn.trə.prəˈnɝː.ʃɪp/'}, {w:'Consensus', ipa:'/kənˈsen.səs/'}] 
-        },
-        '旅遊通關': { 
-            'Beginner': [{w:'Ticket', ipa:'/ˈtɪk.ɪt/'}, {w:'Airport', ipa:'/ˈer.pɔːrt/'}, {w:'Hotel', ipa:'/hoʊˈtel/'}, {w:'Passport', ipa:'/ˈpæs.pɔːrt/'}], 
-            'Intermediate': [{w:'Itinerary', ipa:'/aɪˈtɪn.ə.rer.i/'}, {w:'Baggage', ipa:'/ˈbæɡ.ɪdʒ/'}, {w:'Currency', ipa:'/ˈkɝː.ən.si/'}], 
-            'Advanced': [{w:'Customs', ipa:'/ˈkʌs.təmz/'}, {w:'Quarantine', ipa:'/ˈkwɔːr.ən.tiːn/'}, {w:'Immigration', ipa:'/ˌɪm.əˈɡreɪ.ʃən/'}] 
-        },
-        '日常社交': { 
-            'Beginner': [{w:'Friend', ipa:'/frend/'}, {w:'Family', ipa:'/ˈfæm.əl.i/'}, {w:'Water', ipa:'/ˈwɑː.t̬ɚ/'}, {w:'Store', ipa:'/stɔːr/'}], 
-            'Intermediate': [{w:'Groceries', ipa:'/ˈɡroʊ.sɚ.iz/'}, {w:'Neighborhood', ipa:'/ˈneɪ.bɚ.hʊd/'}, {w:'Recommend', ipa:'/ˌrek.əˈmend/'}], 
-            'Advanced': [{w:'Acquaintance', ipa:'/əˈkweɪn.təns/'}, {w:'Philanthropy', ipa:'/fɪˈlæn.θrə.pi/'}, {w:'Reciprocity', ipa:'/ˌres.ɪˈprɑː.sə.t̬i/'}] 
-        }
-    };
-
     let userLevel = 'Intermediate', currentTopic = '科技電腦', currentCategory = 'Learn', currentScenario = 'General';
     let currentExploreTopic = null, targetPronWord = null, currentWordList = [], currentLessonNum = 1;
     let sessionTurns = 0; const MAX_TURNS = 50; 
@@ -321,39 +288,18 @@
     let currentSessionId = null; let previousTab = 'dashboard';
     const chatLog = document.getElementById('chatLog');
 
-    // 🌟 植入：CSV 變數與讀取邏輯 🌟
-    let csvWords = [];
-    let isUsingCsv = false;
-
-    document.getElementById('csvFileInput').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.readAsArrayBuffer(file);
-        reader.onload = function(event) {
-            const arrayBuffer = event.target.result;
-            const decoder = new TextDecoder('utf-8');
-            const csvText = decoder.decode(arrayBuffer);
-            
-            const lines = csvText.replace(/^\uFEFF/, '').split(/\r?\n/);
-            csvWords = [];
-            for (let i = 1; i < lines.length; i++) {
-                const row = lines[i].split(',');
-                if (row.length >= 2) {
-                    const w = row[0].trim();
-                    const ipa = row[1].trim();
-                    if (w && ipa) csvWords.push({ w, ipa });
-                }
-            }
-            
-            if (csvWords.length > 0) {
-                isUsingCsv = true;
-                document.getElementById('csvStatus').innerText = `✅ 成功載入 ${csvWords.length} 個單字！`;
-                document.getElementById('csvStatus').style.display = 'block';
-            }
-        };
-    });
+    // 🌟 中英對照轉換表 (用來將 UI 的中文分類轉換為 MongoDB 的 Collection Name)
+    const dbTopicMap = {
+        '科技電腦': 'tech',
+        '商務職場': 'business',
+        '旅遊通關': 'travel',
+        '日常社交': 'daily'
+    };
+    const dbLevelMap = {
+        'Beginner': 'beginner',
+        'Intermediate': 'intermediate',
+        'Advanced': 'advanced'
+    };
 
     // --- 介面控制 ---
     function switchTab(tabId) {
@@ -439,9 +385,9 @@
         
         let welcomeMsg = `Hello! I'm your tutor for <b>${currentTopic}</b>. Say "Ready" to begin, and I will guide you!`;
         if (cat === "Assistant") welcomeMsg = `你好！我是 <b>${currentTopic}</b> 的專家，請問有什麼我可以幫忙的？`;
-        if (currentScenario === "Pronunciation_Eval") welcomeMsg = `Welcome to Pronunciation Training! Let's master 2000 words.`;
+        if (currentScenario === "Pronunciation_Eval") welcomeMsg = `Welcome to Pronunciation Training! 正在為您連接雲端單字庫...`;
         
-        chatLog.innerHTML = `<div class="bubble ai"><b>Coach / Assistant</b><br>${welcomeMsg}<div class="trans">準備好了嗎？請按住麥克風回覆！老師會負責引導你。</div></div>`;
+        chatLog.innerHTML = `<div class="bubble ai"><b>Coach / Assistant</b><br>${welcomeMsg}</div>`;
         document.getElementById('chatMainTitle').innerText = titleStr;
         
         sessionTurns = 0; const sHeader = document.getElementById('sessionHeader');
@@ -498,7 +444,8 @@
         else { createNewChat(currentCategory, title, configKey); }
     }
 
-    function startPronunciationSession() {
+    // 🌟 發音特訓：連接後端 MongoDB 抓取單字 🌟
+    async function startPronunciationSession() {
         currentScenario = "Pronunciation_Eval"; currentCategory = "Learn";
         let configKey = `Pron_${currentTopic}_${userLevel}`;
         let title = `發音/${getShortName(currentTopic, userLevel, '')}`;
@@ -508,32 +455,57 @@
             loadChat(existingSession.id); 
         } else { 
             createNewChat("Learn", title, configKey); 
-            // 🌟 植入：判斷是否優先使用 CSV 資料 🌟
-            if (isUsingCsv && csvWords.length > 0) {
-                currentWordList = csvWords;
-            } else {
-                currentWordList = pronDB[currentTopic] ? (pronDB[currentTopic][userLevel] || pronDB['科技電腦']['Beginner']) : pronDB['科技電腦']['Beginner'];
-            }
-            loadNextPronWord();
+            await fetchWordsFromDB();
         }
     }
 
-    // 發音特訓：隨機抽題機制
-    function loadNextPronWord() {
-        // 🌟 植入：確保隨時載入新單字時，都會先檢查有無 CSV 🌟
-        if (isUsingCsv && csvWords.length > 0) {
-            currentWordList = csvWords;
-        } else {
-            currentWordList = pronDB[currentTopic] ? (pronDB[currentTopic][userLevel] || pronDB['科技電腦']['Beginner']) : pronDB['科技電腦']['Beginner'];
-        }
+    async function fetchWordsFromDB() {
+        document.getElementById('chatTitle').innerText = "⏳ 正在載入雲端單字庫...";
+        
+        // 將 UI 的中文主題/等級 轉換為 MongoDB 的 Collection 名稱 (例如 tech_advanced)
+        const tStr = dbTopicMap[currentTopic] || 'tech';
+        const lStr = dbLevelMap[userLevel] || 'beginner';
+        const collectionName = `${tStr}_${lStr}`; 
 
+        try {
+            // 向我們剛建立的 API 發出請求
+            const response = await fetch(`/api/words?collection=${collectionName}`);
+            const data = await response.json();
+            
+            if (data.words && data.words.length > 0) {
+                currentWordList = data.words;
+                loadNextPronWord();
+            } else {
+                appendMsg("System", `❌ 在資料庫找不到集合 <b>${collectionName}</b>，請確認你的 MongoDB 已同步。`, "ai");
+                document.getElementById('chatTitle').innerText = "載入失敗";
+            }
+        } catch (error) {
+            appendMsg("System", "❌ 無法連接至伺服器，請確保後端 API 正在運行。", "ai");
+            document.getElementById('chatTitle').innerText = "連線錯誤";
+        }
+    }
+
+    function loadNextPronWord() {
+        if (!currentWordList || currentWordList.length === 0) return;
+        
+        // 隨機抽取題庫中的一題
         let randomIdx = Math.floor(Math.random() * currentWordList.length);
         const wordData = currentWordList[randomIdx]; 
-        targetPronWord = wordData.w;
         
-        chatLog.innerHTML += `<div class="elsa-card"><div style="color:var(--text-sub); font-size:0.8rem; margin-bottom:10px;">聽老師示範，再按麥克風跟讀：</div><div class="word">${wordData.w}</div><div class="ipa">${wordData.ipa}</div></div>`;
-        playAudio(`/api/tts?text=${encodeURIComponent(wordData.w)}&voice=en-US-AvaNeural`);
-        chatLog.scrollTop = chatLog.scrollHeight; saveHistory();
+        // 從資料庫來的資料欄位是 'word' 和 'ipa'
+        targetPronWord = wordData.word; 
+        
+        chatLog.innerHTML += `
+        <div class="elsa-card">
+            <div style="color:var(--text-sub); font-size:0.8rem; margin-bottom:10px;">聽老師示範，再按麥克風跟讀：</div>
+            <div class="word">${wordData.word}</div>
+            <div class="ipa">${wordData.ipa}</div>
+        </div>`;
+        
+        playAudio(`/api/tts?text=${encodeURIComponent(wordData.word)}&voice=en-US-AvaNeural`);
+        chatLog.scrollTop = chatLog.scrollHeight; 
+        saveHistory();
+        document.getElementById('chatTitle').innerText = "Ready";
     }
 
     // --- 音訊與錄音 ---
