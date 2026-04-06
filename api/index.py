@@ -21,7 +21,7 @@ def index(): return render_template("index.html")
 def transcribe():
     try:
         file = request.files['file']
-        context_word = request.form.get('context_word', '') # 只接收純英文單字
+        context_word = request.form.get('context_word', '')
         scenario = request.form.get('scenario', '')
         
         file_content = file.read()
@@ -31,10 +31,9 @@ def transcribe():
         buffer = io.BytesIO(file_content)
         buffer.name = "audio.mp3" 
         
-        # 🔥 Whisper 防幻覺提示詞設定
         prompt_text = "Hello, this is a daily English conversation."
         if scenario == 'Pronunciation_Eval' and context_word:
-            prompt_text = context_word # 發音特訓時，只給目標英文單字當提示
+            prompt_text = context_word 
 
         transcription = client.audio.transcriptions.create(
             file=buffer, model="whisper-large-v3", language="en", response_format="text",
@@ -42,17 +41,13 @@ def transcribe():
         )
         result = str(transcription).strip()
         
-        # 🔥 終極幻覺過濾器 (去除噪音腦補)
         lower_result = result.lower().replace('.', '').replace('!', '').replace('?', '').strip()
         lower_prompt = prompt_text.lower().replace('.', '').strip()
         
         hallucinations = ["thank you", "thanks for watching", "subtitles", "subscribe", "thanks", "hello", "旅遊通關", "科技電腦", "日常社交"]
-        
-        # 如果辨識結果是空的、是常見幻覺、或者在沒說話時直接吐出 prompt_text，就當作沒聲音
         if not lower_result or \
            any(h in lower_result for h in hallucinations) or \
            (scenario == 'Pronunciation_Eval' and lower_result == lower_prompt and len(file_content) < 10000): 
-            # 檔案太小卻精準辨識出單字，通常是幻覺
             result = ""
 
         return jsonify({"text": result})
