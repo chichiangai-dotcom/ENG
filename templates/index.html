@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AI Coach Pro - Cloud DB Edition</title>
+    <title>AI Coach Pro - Intelligent Memory</title>
     <style>
         :root { 
             --bg-dark: #100C20; --bg-card: #23203B; --bg-card-hover: #312E52;
@@ -92,7 +92,8 @@
         .trans { font-size: 0.75rem; color: var(--text-sub); margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); }
         .elsa-card { background: white; color: #333; border-radius: 15px; padding: 20px; margin: 15px 0; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
         .elsa-card .word { font-size: 2rem; font-weight: 800; color: #100C20; margin-bottom: 5px; }
-        .elsa-card .ipa { color: var(--secondary); font-family: monospace; font-size: 1.2rem; margin-bottom: 10px; }
+        .elsa-card .ipa { color: var(--secondary); font-family: monospace; font-size: 1.2rem; margin-bottom: 5px; }
+        .elsa-card .meaning { color: #555; font-size: 0.95rem; font-weight: bold; margin-bottom: 10px; }
 
         /* 底部導覽列 */
         .bottom-nav { position: absolute; bottom: 0; width: 100%; background: rgba(16, 12, 32, 0.98); display: flex; justify-content: space-around; align-items: center; height: 80px; padding-bottom: env(safe-area-inset-bottom); border-top: 1px solid rgba(255,255,255,0.05); z-index: 100; transition: transform 0.3s; }
@@ -141,7 +142,7 @@
             <div style="font-size:2.5rem;">🗣️</div>
             <div style="flex:1;">
                 <div style="font-weight:bold; font-size:1.1rem; color:var(--primary);">專屬發音特訓</div>
-                <div style="font-size:0.8rem; color:var(--text-sub); margin-top:3px;">雲端題庫：隨機抽取挑戰</div>
+                <div style="font-size:0.8rem; color:var(--text-sub); margin-top:3px;">雲端題庫：中英對照與精準糾錯</div>
             </div>
         </div>
 
@@ -260,12 +261,41 @@
 </div>
 
 <script>
+    // --- 音效系統 (Web Audio API) ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playUIFeedbackSound(isCorrect) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        if (isCorrect) {
+            // 答對：清脆的雙聲高音 (Ding-Ding)
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
+            osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.1); // C6
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.3);
+        } else {
+            // 答錯：低沉的單聲 (Buzz)
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(250, audioCtx.currentTime);
+            gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.4);
+        }
+    }
+
     // --- 嚴謹的進度結構 V8 ---
     const MAX_LESSONS = 10, MAX_WORDS = 2000, MAX_EXPLORE = 20;
     const learnTopics = ['科技電腦', '商務職場', '旅遊通關', '日常社交'];
     const expTopics = ['TOEIC 口說衝刺', 'IELTS 雅思模擬考', '海外生存必備'];
     
-    const currentVersion = "otterProgressV8"; 
+    const currentVersion = "otterProgressV9"; // 更新版號以適應新結構
     let userData = JSON.parse(localStorage.getItem(currentVersion));
     
     if (!userData || typeof userData.lessons['科技電腦'] !== 'object') {
@@ -288,7 +318,6 @@
     let currentSessionId = null; let previousTab = 'dashboard';
     const chatLog = document.getElementById('chatLog');
 
-    // 🌟 中英對照轉換表 (用來將 UI 的中文分類轉換為 MongoDB 的 Collection Name)
     const dbTopicMap = {
         '科技電腦': 'tech',
         '商務職場': 'business',
@@ -369,7 +398,6 @@
         body.style.display = el.classList.contains('open') ? 'block' : 'none';
     }
 
-    // --- 精簡歷史紀錄名稱與接續對話 ---
     function getShortName(topic, lvl, lesson) {
         const lvlMap = {'Beginner':'初', 'Intermediate':'中', 'Advanced':'高'};
         const tMap = {'科技電腦':'科技', '商務職場':'商務', '旅遊通關':'旅遊', '日常社交':'日常', 'TOEIC 口說衝刺':'TOEIC', 'IELTS 雅思模擬考':'IELTS', '海外生存必備':'海外', 'Programming & Coding Expert':'程式', 'Professional Chef':'廚師', 'World Traveler Guide':'旅遊', 'General Knowledge Encyclopedia':'百科', 'Psychologist':'心理', 'Professional Translator':'翻譯'};
@@ -381,7 +409,8 @@
 
     function createNewChat(cat, titleStr, configKey) {
         closeSidebar(); currentCategory = cat; currentSessionId = Date.now().toString();
-        chatHistory.unshift({ id: currentSessionId, category: cat, title: titleStr, html: '', configKey: configKey });
+        // 🌟 初始化 session 時，加上 messages 陣列來儲存記憶 🌟
+        chatHistory.unshift({ id: currentSessionId, category: cat, title: titleStr, html: '', configKey: configKey, messages: [] });
         
         let welcomeMsg = `Hello! I'm your tutor for <b>${currentTopic}</b>. Say "Ready" to begin, and I will guide you!`;
         if (cat === "Assistant") welcomeMsg = `你好！我是 <b>${currentTopic}</b> 的專家，請問有什麼我可以幫忙的？`;
@@ -406,8 +435,19 @@
         if(session) { 
             currentCategory = session.category; chatLog.innerHTML = session.html; 
             document.getElementById('chatMainTitle').innerText = session.title;
+            // 回復計算回合數 (簡單估算)
+            sessionTurns = Math.floor((session.html.match(/bubble user/g) || []).length);
         }
-        document.getElementById('sessionHeader').style.display = 'none'; switchTab('chat');
+        
+        const sHeader = document.getElementById('sessionHeader');
+        if (currentCategory === 'Learn' && session.title.includes('/')) {
+            sHeader.style.display = 'block';
+            let pct = Math.min(100, Math.round((sessionTurns / MAX_TURNS) * 100));
+            document.getElementById('sessionProgFill').style.width = `${pct}%`;
+            document.getElementById('sessionTurnText').innerText = `${sessionTurns} / ${MAX_TURNS} (${pct}%)`;
+        } else { sHeader.style.display = 'none'; }
+        
+        switchTab('chat');
     }
 
     function renameChat(e, id) { e.stopPropagation(); const newName = prompt("重新命名標題："); if(newName) { const s = chatHistory.find(h => h.id === id); if(s) { s.title = newName; localStorage.setItem('otterHistoryProMax', JSON.stringify(chatHistory)); renderSidebar(); } } }
@@ -426,7 +466,6 @@
     function closeSidebar() { document.getElementById('sidebar').classList.remove('active'); document.getElementById('sbOverlay').classList.remove('active'); }
     function saveHistory() { if(currentSessionId) { const s = chatHistory.find(h => h.id === currentSessionId); if(s) { s.html = chatLog.innerHTML; localStorage.setItem('otterHistoryProMax', JSON.stringify(chatHistory)); } } }
 
-    // --- 啟動對話與特訓 (接續防重複機制) ---
     function startLesson(num) { currentLessonNum = num; startChat('Path', 'Learn', currentTopic); }
     function startExplore(topicStr) { currentExploreTopic = topicStr; startChat('Explore', 'Explore', topicStr); }
     
@@ -444,7 +483,6 @@
         else { createNewChat(currentCategory, title, configKey); }
     }
 
-    // 🌟 發音特訓：連接後端 MongoDB 抓取單字 🌟
     async function startPronunciationSession() {
         currentScenario = "Pronunciation_Eval"; currentCategory = "Learn";
         let configKey = `Pron_${currentTopic}_${userLevel}`;
@@ -461,14 +499,11 @@
 
     async function fetchWordsFromDB() {
         document.getElementById('chatTitle').innerText = "⏳ 正在載入雲端單字庫...";
-        
-        // 將 UI 的中文主題/等級 轉換為 MongoDB 的 Collection 名稱 (例如 tech_advanced)
         const tStr = dbTopicMap[currentTopic] || 'tech';
         const lStr = dbLevelMap[userLevel] || 'beginner';
         const collectionName = `${tStr}_${lStr}`; 
 
         try {
-            // 向我們剛建立的 API 發出請求
             const response = await fetch(`/api/words?collection=${collectionName}`);
             const data = await response.json();
             
@@ -487,12 +522,8 @@
 
     function loadNextPronWord() {
         if (!currentWordList || currentWordList.length === 0) return;
-        
-        // 隨機抽取題庫中的一題
         let randomIdx = Math.floor(Math.random() * currentWordList.length);
         const wordData = currentWordList[randomIdx]; 
-        
-        // 從資料庫來的資料欄位是 'word' 和 'ipa'
         targetPronWord = wordData.word; 
         
         chatLog.innerHTML += `
@@ -508,7 +539,6 @@
         document.getElementById('chatTitle').innerText = "Ready";
     }
 
-    // --- 音訊與錄音 ---
     const recordBtn = document.getElementById('recordBtn');
     function playAudio(url) { if(activeAudio) { activeAudio.pause(); activeAudio.currentTime = 0; } activeAudio = new Audio(url); activeAudio.play(); }
 
@@ -553,22 +583,51 @@
             }
             
             appendMsg("You", sttData.text, "user");
+            
+            // 🌟 儲存對話到記憶中 🌟
+            const currentSession = chatHistory.find(h => h.id === currentSessionId);
+            if(currentSession && !currentSession.messages) currentSession.messages = [];
+            if(currentSession) currentSession.messages.push({"role": "user", "content": sttData.text});
+
             document.getElementById('chatTitle').innerText = "🤔 思考中...";
 
             const res = await fetch('/api/chat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ message: sttData.text, scenario: currentScenario, level: userLevel, topic: currentTopic, target_word: targetPronWord, lesson_num: currentLessonNum })
+                body: JSON.stringify({ 
+                    message: sttData.text, 
+                    scenario: currentScenario, 
+                    level: userLevel, 
+                    topic: currentTopic, 
+                    target_word: targetPronWord, 
+                    lesson_num: currentLessonNum,
+                    history: currentSession ? currentSession.messages : []  // 🌟 將記憶傳給後端
+                })
             });
             const data = await res.json();
             
+            // 🌟 儲存 AI 回覆到記憶中 🌟
+            if(currentSession) currentSession.messages.push({"role": "assistant", "content": data.reply});
+
             if(currentScenario === 'Assistant') {
                 appendMsg("AI 專家", data.reply, "ai");
             } else if (currentScenario === 'Pronunciation_Eval') {
                 const pronHtml = data.feedback ? data.feedback.pron_html : data.reply;
                 const isCorrect = data.feedback ? data.feedback.is_correct : false;
+                const meaning = data.word_meaning || ""; // 🌟 接收中文翻譯
                 
-                chatLog.innerHTML += `<div class="elsa-card" style="border: 2px solid ${isCorrect ? 'var(--success)' : 'var(--accent)'};"><div style="font-size:0.8rem; color:${isCorrect ? 'var(--success)' : 'var(--accent)'}; font-weight:bold;">${isCorrect ? '✅ 完美發音' : '❌ 需要調整 (紅字)'}</div><div style="font-size:1.8rem; font-weight:bold; margin:10px 0; color:#100C20;">${pronHtml}</div><div style="font-size:0.9rem; color:#555;">${data.reply}</div></div>`;
+                // 🌟 播放相對應的音效 🌟
+                playUIFeedbackSound(isCorrect);
+                
+                // 🌟 修改錯字提示文字，並加上翻譯 🌟
+                chatLog.innerHTML += `
+                <div class="elsa-card" style="border: 2px solid ${isCorrect ? 'var(--success)' : 'var(--accent)'};">
+                    <div style="font-size:0.8rem; color:${isCorrect ? 'var(--success)' : 'var(--accent)'}; font-weight:bold;">${isCorrect ? '✅ 完美發音' : '❌ 需要調整'}</div>
+                    <div style="font-size:1.8rem; font-weight:bold; margin:10px 0; color:#100C20;">${pronHtml}</div>
+                    ${meaning ? `<div class="meaning">${meaning}</div>` : ''}
+                    <div style="font-size:0.9rem; color:#555;">${data.reply}</div>
+                </div>`;
+                
                 if(isCorrect) { 
                     userData.words[currentTopic] = Math.min((userData.words[currentTopic]||0) + 1, MAX_WORDS);
                     saveUserData();  
@@ -605,7 +664,6 @@
         chatLog.appendChild(d); chatLog.scrollTop = chatLog.scrollHeight; saveHistory();
     }
 
-    // --- 所有分類進度渲染 ---
     function saveUserData() { localStorage.setItem(currentVersion, JSON.stringify(userData)); }
     
     function updateExploreMiniStats() {
