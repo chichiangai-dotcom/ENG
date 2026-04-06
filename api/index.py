@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify, send_file, render_template
 from flask_cors import CORS
 from groq import Groq
 import edge_tts
-from pymongo import MongoClient  # 🌟 新增：MongoDB 套件
+from pymongo import MongoClient
 
 if sys.platform == "win32":
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
@@ -15,9 +15,6 @@ CORS(app)
 RAW_KEY = "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"
 client = Groq(api_key=RAW_KEY)
 
-# ==========================================
-# 🌟 新增：MongoDB Atlas 連線設定
-# ==========================================
 MONGO_URI = "mongodb+srv://chichiangai_db_user:AkxvonTnansUtVFc@cluster0.wvkc0rt.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 try:
     mongo_client = MongoClient(MONGO_URI)
@@ -25,30 +22,22 @@ try:
     print("✅ 後端已成功連線至 MongoDB Atlas 雲端資料庫！")
 except Exception as e:
     print(f"❌ MongoDB 連線失敗: {e}")
-# ==========================================
 
 @app.route("/")
 def index(): return render_template("index.html")
 
-# ==========================================
-# 🌟 新增：取得 MongoDB 單字庫 API
-# ==========================================
 @app.route("/api/words", methods=["GET"])
 def get_words():
     try:
         collection_name = request.args.get('collection')
         if not collection_name:
             return jsonify({"error": "缺少 collection 參數"}), 400
-            
         col = db[collection_name]
-        # 從資料庫撈出該集合的所有單字，並排除預設的 _id 欄位
         words_data = list(col.find({}, {"_id": 0}))
-        
         return jsonify({"words": words_data})
     except Exception as e:
         traceback.print_exc()
         return jsonify({"error": "資料庫讀取失敗", "details": str(e)}), 500
-# ==========================================
 
 @app.route("/api/transcribe", methods=["POST"])
 def transcribe():
@@ -96,6 +85,8 @@ def chat():
         topic = data.get("topic", "General")
         target_word = data.get("target_word", "")
         lesson_num = data.get("lesson_num", 1)
+        # 🌟 接收前端傳來的歷史紀錄 (最多保留最近 8 句，避免 Token 爆炸)
+        chat_history = data.get("history", [])[-8:]
         
         system_prompt = ""
         
@@ -105,7 +96,8 @@ def chat():
                 f"User's speech: '{user_msg}'. "
                 "1. Determine if the user successfully pronounced it. Provide boolean 'is_correct'. "
                 "2. If incorrect, provide HTML highlighting the wrong parts in RED. Example: <span style='color:red; font-weight:bold;'>wrong_part</span>. "
-                "JSON: {\"reply\": \"Encouraging feedback in English\", \"translation\": \"繁體中文回饋\", \"feedback\": {\"pron_html\": \"Highlighted word\", \"is_correct\": true/false}}"
+                "3. Crucial: Provide the Traditional Chinese translation of the target word in the 'word_meaning' field. "
+                "JSON: {\"reply\": \"Encouraging feedback in English\", \"translation\": \"繁體中文回饋\", \"word_meaning\": \"該單字的繁體中文意思\", \"feedback\": {\"pron_html\": \"Highlighted word\", \"is_correct\": true/false}}"
             )
         elif scene == "Assistant":
             system_prompt = (
@@ -122,14 +114,17 @@ def chat():
                 f"CRITICAL INSTRUCTIONS: "
                 f"1. STRICTLY keep the conversation on the topic of '{topic}'. "
                 f"2. ERROR CORRECTION: If the user's input is completely off-topic or seems like a speech recognition error, politely explain what they might have gotten wrong, ask them to repeat it clearly, and guide them back to '{topic}'. "
-                "3. You MUST actively lead the conversation. End your reply with a direct question to keep them talking. "
+                "3. You MUST actively lead the conversation based on the previous chat history. End your reply with a direct question to keep them talking. "
                 "Respond ONLY in JSON. "
                 "JSON: {\"reply\": \"English reply\", \"translation\": \"繁體中文翻譯\", \"feedback\": {\"correction\": \"Correction if any, else null\"}}"
             )
 
+        # 🌟 將歷史紀錄加入對話中 🌟
+        messages = [{"role": "system", "content": system_prompt}] + chat_history + [{"role": "user", "content": user_msg}]
+
         completion = client.chat.completions.create(
             model="llama-3.3-70b-versatile",
-            messages=[{"role": "system", "content": system_prompt}, {"role": "user", "content": user_msg}],
+            messages=messages,
             response_format={"type": "json_object"}
         )
         return jsonify(json.loads(completion.choices[0].message.content))
