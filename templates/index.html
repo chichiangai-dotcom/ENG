@@ -36,7 +36,7 @@
         .top-nav { padding: 15px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 10; }
         .icon-btn { font-size: 1.5rem; cursor: pointer; color: white; padding: 5px; }
         
-        /* 選取框 (已修正) */
+        /* 選取框 */
         .level-selector { background: rgba(255,255,255,0.05); padding: 8px; border-radius: 12px; display: flex; margin-bottom: 15px; }
         .lvl-btn { flex: 1; text-align: center; padding: 8px; border-radius: 8px; font-size: 0.85rem; color: var(--text-sub); cursor: pointer; transition: 0.2s; border: 2px solid transparent; }
         .lvl-btn.active { background: rgba(77, 162, 255, 0.2); color: white; font-weight: bold; border-color: var(--primary); box-shadow: 0 2px 10px rgba(77, 162, 255, 0.2); }
@@ -79,7 +79,7 @@
         .prog-bar-fill { height: 100%; border-radius: 5px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
         .prog-pct { width: 85px; text-align: right; font-size: 0.75rem; font-family: monospace; color: var(--text-sub);}
 
-        /* 🔥 聊天與發音卡片 (新增頂部導覽列) */
+        /* 聊天與發音卡片 */
         .chat-top-bar { display: flex; align-items: center; padding: 15px 20px; background: rgba(16, 12, 32, 0.95); position: sticky; top: 0; z-index: 10; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .session-header { padding: 10px 20px; background: rgba(16, 12, 32, 0.95); border-bottom: 1px solid rgba(255,255,255,0.05); display: none;}
         .session-title { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-sub); margin-bottom: 5px; }
@@ -102,13 +102,16 @@
         .record-btn { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; justify-content: center; align-items: center; font-size: 1.5rem; border: none; position: absolute; top: -20px; box-shadow: 0 5px 15px rgba(77, 162, 255, 0.4); touch-action: none; z-index: 101; cursor: pointer; -webkit-user-select: none; -webkit-touch-callout: none; outline: none;}
         .record-btn.recording { background: var(--accent); animation: pulse 1s infinite; }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(255, 82, 82, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(255, 82, 82, 0); } }
+
+        /* CSV 載入器樣式 (植入) */
+        .csv-loader { background: rgba(255,255,255,0.05); padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px dashed rgba(255,255,255,0.2); }
     </style>
 </head>
 <body>
 
 <div class="app-shell">
 
-    <div class="sidebar-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
+    <div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
     <div class="sidebar" id="sidebar">
         <div class="sb-header"><h3>歷史紀錄</h3><div class="icon-btn" onclick="closeSidebar()">✕</div></div>
         <div class="sb-scroll">
@@ -124,6 +127,13 @@
     </div>
 
     <div id="tab-dashboard" class="screen active">
+
+        <div class="csv-loader">
+            <div style="font-size: 0.8rem; color: var(--text-sub); margin-bottom: 8px;">📁 載入外部單字庫 (CSV, UTF-8 BOM)</div>
+            <input type="file" id="csvFileInput" accept=".csv" style="font-size: 0.75rem; color: white; width: 100%;">
+            <div id="csvStatus" style="font-size: 0.75rem; color: var(--success); margin-top: 5px; display: none;">已載入 0 個單字</div>
+        </div>
+
         <div class="level-selector">
             <div class="lvl-btn" data-lvl="Beginner" onclick="setLevel('Beginner')">A1 初級</div>
             <div class="lvl-btn active" data-lvl="Intermediate" onclick="setLevel('Intermediate')">B1 中級</div>
@@ -311,6 +321,40 @@
     let currentSessionId = null; let previousTab = 'dashboard';
     const chatLog = document.getElementById('chatLog');
 
+    // 🌟 植入：CSV 變數與讀取邏輯 🌟
+    let csvWords = [];
+    let isUsingCsv = false;
+
+    document.getElementById('csvFileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(file);
+        reader.onload = function(event) {
+            const arrayBuffer = event.target.result;
+            const decoder = new TextDecoder('utf-8');
+            const csvText = decoder.decode(arrayBuffer);
+            
+            const lines = csvText.replace(/^\uFEFF/, '').split(/\r?\n/);
+            csvWords = [];
+            for (let i = 1; i < lines.length; i++) {
+                const row = lines[i].split(',');
+                if (row.length >= 2) {
+                    const w = row[0].trim();
+                    const ipa = row[1].trim();
+                    if (w && ipa) csvWords.push({ w, ipa });
+                }
+            }
+            
+            if (csvWords.length > 0) {
+                isUsingCsv = true;
+                document.getElementById('csvStatus').innerText = `✅ 成功載入 ${csvWords.length} 個單字！`;
+                document.getElementById('csvStatus').style.display = 'block';
+            }
+        };
+    });
+
     // --- 介面控制 ---
     function switchTab(tabId) {
         if(tabId !== 'chat') previousTab = tabId;
@@ -464,14 +508,25 @@
             loadChat(existingSession.id); 
         } else { 
             createNewChat("Learn", title, configKey); 
-            currentWordList = pronDB[currentTopic] ? (pronDB[currentTopic][userLevel] || pronDB['科技電腦']['Beginner']) : pronDB['科技電腦']['Beginner'];
+            // 🌟 植入：判斷是否優先使用 CSV 資料 🌟
+            if (isUsingCsv && csvWords.length > 0) {
+                currentWordList = csvWords;
+            } else {
+                currentWordList = pronDB[currentTopic] ? (pronDB[currentTopic][userLevel] || pronDB['科技電腦']['Beginner']) : pronDB['科技電腦']['Beginner'];
+            }
             loadNextPronWord();
         }
     }
 
-    // 發音特訓：隨機抽題機制 (模擬大字庫)
+    // 發音特訓：隨機抽題機制
     function loadNextPronWord() {
-        currentWordList = pronDB[currentTopic] ? (pronDB[currentTopic][userLevel] || pronDB['科技電腦']['Beginner']) : pronDB['科技電腦']['Beginner'];
+        // 🌟 植入：確保隨時載入新單字時，都會先檢查有無 CSV 🌟
+        if (isUsingCsv && csvWords.length > 0) {
+            currentWordList = csvWords;
+        } else {
+            currentWordList = pronDB[currentTopic] ? (pronDB[currentTopic][userLevel] || pronDB['科技電腦']['Beginner']) : pronDB['科技電腦']['Beginner'];
+        }
+
         let randomIdx = Math.floor(Math.random() * currentWordList.length);
         const wordData = currentWordList[randomIdx]; 
         targetPronWord = wordData.w;
@@ -505,7 +560,6 @@
         isRecording = false; recordBtn.classList.remove('recording');
     };
 
-    // 嚴格防呆：手滑開也停止錄音
     recordBtn.addEventListener('mousedown', startRec); recordBtn.addEventListener('mouseup', stopRec); recordBtn.addEventListener('mouseleave', stopRec);
     recordBtn.addEventListener('touchstart', startRec, {passive: false}); recordBtn.addEventListener('touchend', stopRec, {passive: false}); recordBtn.addEventListener('touchcancel', stopRec, {passive: false});
 
@@ -514,7 +568,6 @@
         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
         const formData = new FormData(); formData.append('file', audioBlob, 'audio.webm');
 
-        // 🔥 將 context 傳給 Whisper
         let sttContext = currentScenario === 'Pronunciation_Eval' ? targetPronWord : currentTopic;
         formData.append('context_word', sttContext);
         formData.append('scenario', currentScenario);
