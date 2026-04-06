@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>AI Coach Pro - Intelligent Memory</title>
+    <title>AI Coach Pro - Coach Edition</title>
     <style>
         :root { 
             --bg-dark: #100C20; --bg-card: #23203B; --bg-card-hover: #312E52;
@@ -14,18 +14,26 @@
         body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-main); display: flex; justify-content: center; height: 100dvh; overflow: hidden; }
         .app-shell { width: 100%; max-width: 480px; height: 100%; display: flex; flex-direction: column; position: relative; background: linear-gradient(180deg, #1C1836 0%, var(--bg-dark) 100%); padding-bottom: env(safe-area-inset-bottom); overflow: hidden; }
 
-        /* 側邊欄 */
+        /* 側邊欄與複選刪除 */
         .sidebar { position: absolute; top: 0; left: 0; width: 280px; height: 100%; background: #16122B; z-index: 999; transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; box-shadow: 5px 0 15px rgba(0,0,0,0.5); }
         .sidebar.active { transform: translateX(0); }
         .sb-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); z-index: 998; opacity: 0; pointer-events: none; transition: 0.3s; }
         .sb-overlay.active { opacity: 1; pointer-events: auto; }
-        .sb-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; font-weight: bold; }
+        .sb-header { padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
         .sb-scroll { flex: 1; overflow-y: auto; padding: 10px; }
         .sb-section-title { font-size: 0.75rem; color: var(--primary); margin: 15px 10px 5px 10px; text-transform: uppercase; font-weight: bold; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
+        
         .history-item { padding: 12px; border-radius: 8px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; color: var(--text-sub); font-size: 0.85rem; background: rgba(255,255,255,0.02); }
         .history-item:active, .history-item.active { background: rgba(255,255,255,0.08); color: white; }
         .action-btns { display: flex; gap: 10px; }
         .action-btn { padding: 5px; font-size: 0.9rem; cursor: pointer; }
+        
+        /* 複選框樣式 */
+        .hist-checkbox { display: none; margin-right: 10px; width: 18px; height: 18px; cursor: pointer; }
+        .edit-mode .hist-checkbox { display: block; }
+        .edit-mode .action-btns { display: none; }
+        .bulk-del-btn { display: none; background: var(--accent); color: white; border: none; padding: 15px; text-align: center; font-weight: bold; cursor: pointer; width: 100%; }
+        .edit-mode ~ .bulk-del-btn { display: block; }
 
         /* 視窗與選單 */
         .screen { flex: 1; overflow-y: auto; display: none; flex-direction: column; padding: 0 20px; padding-bottom: 110px; -webkit-overflow-scrolling: touch; }
@@ -56,8 +64,13 @@
         .lesson-num { width: 35px; height: 35px; border-radius: 50%; background: rgba(255,255,255,0.1); display: flex; justify-content: center; align-items: center; font-weight: bold; color: var(--primary); flex-shrink: 0;}
         .lesson-num.completed { background: var(--success); color: #100C20; }
         
-        .chat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
-        .chat-opt { background: var(--bg-card); padding: 20px 15px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; cursor: pointer; border: 1px solid rgba(255,255,255,0.05); }
+        /* 教練選單網格 */
+        .coach-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+        .coach-opt { background: var(--bg-card); padding: 15px; border-radius: 15px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; cursor: pointer; border: 2px solid rgba(255,255,255,0.05); transition: 0.2s;}
+        .coach-opt.active { border-color: var(--primary); background: rgba(77, 162, 255, 0.1); }
+        .coach-flag { font-size: 2rem; }
+        .coach-name { font-weight: bold; font-size: 0.9rem; }
+        .coach-desc { font-size: 0.7rem; color: var(--text-sub); }
 
         /* 折疊選單 */
         .acc-item { margin-bottom: 15px; }
@@ -91,7 +104,9 @@
         .ai { align-self: flex-start; background: var(--bg-card); border: 1px solid rgba(255,255,255,0.05); }
         .trans { font-size: 0.75rem; color: var(--text-sub); margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); }
         .elsa-card { background: white; color: #333; border-radius: 15px; padding: 20px; margin: 15px 0; text-align: center; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }
-        .elsa-card .word { font-size: 2rem; font-weight: 800; color: #100C20; margin-bottom: 5px; }
+        .elsa-card .word { font-size: 2.2rem; font-weight: 800; color: #100C20; margin-bottom: 5px; display: flex; justify-content: center; align-items: center; gap: 10px; }
+        .elsa-card .replay-btn { font-size: 1.5rem; cursor: pointer; color: var(--primary); transition: 0.2s; }
+        .elsa-card .replay-btn:active { transform: scale(0.8); }
         .elsa-card .ipa { color: var(--secondary); font-family: monospace; font-size: 1.2rem; margin-bottom: 5px; }
         .elsa-card .meaning { color: #555; font-size: 0.95rem; font-weight: bold; margin-bottom: 10px; }
 
@@ -111,12 +126,18 @@
 
     <div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
     <div class="sidebar" id="sidebar">
-        <div class="sb-header"><h3>歷史紀錄</h3><div class="icon-btn" onclick="closeSidebar()">✕</div></div>
-        <div class="sb-scroll">
+        <div class="sb-header">
+            <span>歷史紀錄</span>
+            <div style="display:flex; gap:10px;">
+                <div class="icon-btn" style="font-size:1rem;" onclick="toggleEditHistory()" id="editHistBtn">✏️編輯</div>
+                <div class="icon-btn" onclick="closeSidebar()">✕</div>
+            </div>
+        </div>
+        <div class="sb-scroll" id="sidebarScroll">
             <div class="sb-section-title">📖 學習紀錄</div><div id="hist-learn"></div>
             <div class="sb-section-title" style="margin-top:20px;">🧭 探索測驗紀錄</div><div id="hist-explore"></div>
-            <div class="sb-section-title" style="margin-top:20px;">🤖 AI 助理紀錄</div><div id="hist-assistant"></div>
         </div>
+        <button class="bulk-del-btn" onclick="bulkDeleteHistory()">🗑️ 刪除勾選項目</button>
     </div>
 
     <div class="top-nav" id="topNav">
@@ -125,7 +146,6 @@
     </div>
 
     <div id="tab-dashboard" class="screen active">
-
         <div class="level-selector">
             <div class="lvl-btn" data-lvl="Beginner" onclick="setLevel('Beginner')">A1 初級</div>
             <div class="lvl-btn active" data-lvl="Intermediate" onclick="setLevel('Intermediate')">B1 中級</div>
@@ -142,7 +162,7 @@
             <div style="font-size:2.5rem;">🗣️</div>
             <div style="flex:1;">
                 <div style="font-weight:bold; font-size:1.1rem; color:var(--primary);">專屬發音特訓</div>
-                <div style="font-size:0.8rem; color:var(--text-sub); margin-top:3px;">雲端題庫：中英對照與精準糾錯</div>
+                <div style="font-size:0.8rem; color:var(--text-sub); margin-top:3px;">連接雲端字庫，精準糾錯</div>
             </div>
         </div>
 
@@ -203,22 +223,45 @@
         </div>
     </div>
 
-    <div id="tab-aichat" class="screen">
-        <h2 style="margin-top:0;">全能 AI 助理庫</h2>
-        <p style="font-size:0.85rem; color:var(--text-sub); margin-bottom:15px;">解答你生活中的任何問題（不限於學英文）。</p>
-        <div class="chat-grid">
-            <div class="chat-opt" onclick="startChat('Assistant', 'Assistant', 'Programming & Coding Expert')"><div style="font-size:2rem;">👨‍💻</div><div style="font-weight:bold;">程式大神</div></div>
-            <div class="chat-opt" onclick="startChat('Assistant', 'Assistant', 'Professional Chef')"><div style="font-size:2rem;">🍳</div><div style="font-weight:bold;">食譜主廚</div></div>
-            <div class="chat-opt" onclick="startChat('Assistant', 'Assistant', 'World Traveler Guide')"><div style="font-size:2rem;">🗺️</div><div style="font-weight:bold;">旅遊規劃</div></div>
-            <div class="chat-opt" onclick="startChat('Assistant', 'Assistant', 'General Knowledge Encyclopedia')"><div style="font-size:2rem;">🧠</div><div style="font-weight:bold;">百科全書</div></div>
-            <div class="chat-opt" onclick="startChat('Assistant', 'Assistant', 'Psychologist')"><div style="font-size:2rem;">🛋️</div><div style="font-weight:bold;">心理諮商</div></div>
-            <div class="chat-opt" onclick="startChat('Assistant', 'Assistant', 'Professional Translator')"><div style="font-size:2rem;">🔄</div><div style="font-weight:bold;">多國翻譯</div></div>
+    <div id="tab-coach" class="screen">
+        <h2 style="margin-top:0;">選擇專屬教練</h2>
+        <p style="font-size:0.85rem; color:var(--text-sub); margin-bottom:15px;">不同的口音能幫助你適應全球化的英語環境。</p>
+        <div class="coach-grid">
+            <div class="coach-opt active" onclick="setCoach(this, 'en-US-AvaNeural', 'Ava (美國)')">
+                <div class="coach-flag">🇺🇸</div><div class="coach-name">Ava</div><div class="coach-desc">美式發音 (女)</div>
+            </div>
+            <div class="coach-opt" onclick="setCoach(this, 'en-US-GuyNeural', 'Guy (美國)')">
+                <div class="coach-flag">🇺🇸</div><div class="coach-name">Guy</div><div class="coach-desc">美式發音 (男)</div>
+            </div>
+            <div class="coach-opt" onclick="setCoach(this, 'en-GB-SoniaNeural', 'Sonia (英國)')">
+                <div class="coach-flag">🇬🇧</div><div class="coach-name">Sonia</div><div class="coach-desc">英式發音 (女)</div>
+            </div>
+            <div class="coach-opt" onclick="setCoach(this, 'en-GB-RyanNeural', 'Ryan (英國)')">
+                <div class="coach-flag">🇬🇧</div><div class="coach-name">Ryan</div><div class="coach-desc">英式發音 (男)</div>
+            </div>
+            <div class="coach-opt" onclick="setCoach(this, 'en-AU-NatashaNeural', 'Natasha (澳洲)')">
+                <div class="coach-flag">🇦🇺</div><div class="coach-name">Natasha</div><div class="coach-desc">澳洲發音 (女)</div>
+            </div>
+            <div class="coach-opt" onclick="setCoach(this, 'en-AU-WilliamNeural', 'William (澳洲)')">
+                <div class="coach-flag">🇦🇺</div><div class="coach-name">William</div><div class="coach-desc">澳洲發音 (男)</div>
+            </div>
+            <div class="coach-opt" onclick="setCoach(this, 'de-DE-KatjaNeural', 'Katja (德國)')">
+                <div class="coach-flag">🇩🇪</div><div class="coach-name">Katja</div><div class="coach-desc">德式口音 (女)</div>
+            </div>
+            <div class="coach-opt" onclick="setCoach(this, 'de-DE-ConradNeural', 'Conrad (德國)')">
+                <div class="coach-flag">🇩🇪</div><div class="coach-name">Conrad</div><div class="coach-desc">德式口音 (男)</div>
+            </div>
+            <div class="coach-opt" onclick="setCoach(this, 'de-CH-LeniNeural', 'Leni (瑞士)')">
+                <div class="coach-flag">🇨🇭</div><div class="coach-name">Leni</div><div class="coach-desc">瑞士口音 (女)</div>
+            </div>
+            <div class="coach-opt" onclick="setCoach(this, 'de-CH-JanNeural', 'Jan (瑞士)')">
+                <div class="coach-flag">🇨🇭</div><div class="coach-name">Jan</div><div class="coach-desc">瑞士口音 (男)</div>
+            </div>
         </div>
     </div>
 
     <div id="tab-progress" class="screen">
         <h2 style="margin-top:0; margin-bottom: 20px;">全方位學習進度</h2>
-        
         <div class="acc-item">
             <div class="acc-header open" onclick="toggleAccordion(this)"><span>📚 課程完成度 (10課/級)</span><span class="arrow">▼</span></div>
             <div class="acc-body" id="prog-lessons-container" style="display:block;"></div>
@@ -254,14 +297,14 @@
         <div class="nav-item active" onclick="switchTab('dashboard')"><div style="font-size:1.2rem;">📖</div><span>學習</span></div>
         <div class="nav-item" onclick="switchTab('explore')"><div style="font-size:1.2rem;">🧭</div><span>探索</span></div>
         <div class="record-wrap"><button id="recordBtn" class="record-btn">🎙️</button></div>
-        <div class="nav-item" onclick="switchTab('aichat')"><div style="font-size:1.2rem;">🤖</div><span>AI助理</span></div>
+        <div class="nav-item" onclick="switchTab('coach')"><div style="font-size:1.2rem;">🧑‍🏫</div><span>教練</span></div>
         <div class="nav-item" onclick="switchTab('progress')"><div style="font-size:1.2rem;">📈</div><span>進度</span></div>
     </div>
 
 </div>
 
 <script>
-    // --- 音效系統 (Web Audio API) ---
+    // --- 音效系統 ---
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playUIFeedbackSound(isCorrect) {
         if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -271,16 +314,14 @@
         gainNode.connect(audioCtx.destination);
         
         if (isCorrect) {
-            // 答對：清脆的雙聲高音 (Ding-Ding)
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
-            osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.1); // C6
+            osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(1046.50, audioCtx.currentTime + 0.1);
             gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
             osc.start();
             osc.stop(audioCtx.currentTime + 0.3);
         } else {
-            // 答錯：低沉的單聲 (Buzz)
             osc.type = 'sawtooth';
             osc.frequency.setValueAtTime(250, audioCtx.currentTime);
             gainNode.gain.setValueAtTime(0.3, audioCtx.currentTime);
@@ -290,12 +331,13 @@
         }
     }
 
-    // --- 嚴謹的進度結構 V8 ---
+    // --- 全局變數與設定 ---
     const MAX_LESSONS = 10, MAX_WORDS = 2000, MAX_EXPLORE = 20;
     const learnTopics = ['科技電腦', '商務職場', '旅遊通關', '日常社交'];
     const expTopics = ['TOEIC 口說衝刺', 'IELTS 雅思模擬考', '海外生存必備'];
     
-    const currentVersion = "otterProgressV9"; // 更新版號以適應新結構
+    let globalVoice = 'en-US-AvaNeural'; // 預設教練語音
+    const currentVersion = "otterProgressV10"; 
     let userData = JSON.parse(localStorage.getItem(currentVersion));
     
     if (!userData || typeof userData.lessons['科技電腦'] !== 'object') {
@@ -317,18 +359,10 @@
     let chatHistory = JSON.parse(localStorage.getItem('otterHistoryProMax')) || [];
     let currentSessionId = null; let previousTab = 'dashboard';
     const chatLog = document.getElementById('chatLog');
+    let isEditMode = false; // 控制側邊欄編輯模式
 
-    const dbTopicMap = {
-        '科技電腦': 'tech',
-        '商務職場': 'business',
-        '旅遊通關': 'travel',
-        '日常社交': 'daily'
-    };
-    const dbLevelMap = {
-        'Beginner': 'beginner',
-        'Intermediate': 'intermediate',
-        'Advanced': 'advanced'
-    };
+    const dbTopicMap = { '科技電腦': 'tech', '商務職場': 'business', '旅遊通關': 'travel', '日常社交': 'daily' };
+    const dbLevelMap = { 'Beginner': 'beginner', 'Intermediate': 'intermediate', 'Advanced': 'advanced' };
 
     // --- 介面控制 ---
     function switchTab(tabId) {
@@ -336,7 +370,7 @@
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById('tab-' + tabId).classList.add('active');
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-        const map = {'dashboard':0, 'explore':1, 'aichat':3, 'progress':4};
+        const map = {'dashboard':0, 'explore':1, 'coach':3, 'progress':4};
         if(map[tabId] !== undefined) document.querySelectorAll('.nav-item')[map[tabId]].classList.add('active');
         
         document.getElementById('topNav').style.display = (tabId === 'chat') ? 'none' : 'flex';
@@ -363,6 +397,13 @@
         event.currentTarget.classList.add('active');
         currentTopic = topic; document.getElementById('dash-title').innerText = topic;
         renderLessons(); updateDashboardProgress();
+    }
+
+    function setCoach(el, voiceId, name) {
+        document.querySelectorAll('.coach-opt').forEach(opt => opt.classList.remove('active'));
+        el.classList.add('active');
+        globalVoice = voiceId;
+        playAudio(`/api/tts?text=${encodeURIComponent("Hello, I am your coach.")}&voice=${globalVoice}`);
     }
 
     function updateDashboardProgress() {
@@ -400,7 +441,7 @@
 
     function getShortName(topic, lvl, lesson) {
         const lvlMap = {'Beginner':'初', 'Intermediate':'中', 'Advanced':'高'};
-        const tMap = {'科技電腦':'科技', '商務職場':'商務', '旅遊通關':'旅遊', '日常社交':'日常', 'TOEIC 口說衝刺':'TOEIC', 'IELTS 雅思模擬考':'IELTS', '海外生存必備':'海外', 'Programming & Coding Expert':'程式', 'Professional Chef':'廚師', 'World Traveler Guide':'旅遊', 'General Knowledge Encyclopedia':'百科', 'Psychologist':'心理', 'Professional Translator':'翻譯'};
+        const tMap = {'科技電腦':'科技', '商務職場':'商務', '旅遊通關':'旅遊', '日常社交':'日常', 'TOEIC 口說衝刺':'TOEIC', 'IELTS 雅思模擬考':'IELTS', '海外生存必備':'海外'};
         let shortT = tMap[topic] || topic.substring(0,2);
         let shortL = lvlMap[lvl] || lvl;
         if (lesson) return `${shortT}/${shortL}/${lesson}`;
@@ -409,14 +450,12 @@
 
     function createNewChat(cat, titleStr, configKey) {
         closeSidebar(); currentCategory = cat; currentSessionId = Date.now().toString();
-        // 🌟 初始化 session 時，加上 messages 陣列來儲存記憶 🌟
         chatHistory.unshift({ id: currentSessionId, category: cat, title: titleStr, html: '', configKey: configKey, messages: [] });
         
-        let welcomeMsg = `Hello! I'm your tutor for <b>${currentTopic}</b>. Say "Ready" to begin, and I will guide you!`;
-        if (cat === "Assistant") welcomeMsg = `你好！我是 <b>${currentTopic}</b> 的專家，請問有什麼我可以幫忙的？`;
-        if (currentScenario === "Pronunciation_Eval") welcomeMsg = `Welcome to Pronunciation Training! 正在為您連接雲端單字庫...`;
+        let welcomeMsg = `Hello! I'm your coach. Say "Ready" to begin!`;
+        if (currentScenario === "Pronunciation_Eval") welcomeMsg = `連接單字庫`;
         
-        chatLog.innerHTML = `<div class="bubble ai"><b>Coach / Assistant</b><br>${welcomeMsg}</div>`;
+        chatLog.innerHTML = `<div class="bubble ai"><b>Coach</b><br>${welcomeMsg}</div>`;
         document.getElementById('chatMainTitle').innerText = titleStr;
         
         sessionTurns = 0; const sHeader = document.getElementById('sessionHeader');
@@ -431,14 +470,13 @@
     }
 
     function loadChat(id) {
+        if(isEditMode) return; // 編輯模式下不跳轉
         currentSessionId = id; const session = chatHistory.find(h => h.id === id);
         if(session) { 
             currentCategory = session.category; chatLog.innerHTML = session.html; 
             document.getElementById('chatMainTitle').innerText = session.title;
-            // 回復計算回合數 (簡單估算)
             sessionTurns = Math.floor((session.html.match(/bubble user/g) || []).length);
         }
-        
         const sHeader = document.getElementById('sessionHeader');
         if (currentCategory === 'Learn' && session.title.includes('/')) {
             sHeader.style.display = 'block';
@@ -446,24 +484,52 @@
             document.getElementById('sessionProgFill').style.width = `${pct}%`;
             document.getElementById('sessionTurnText').innerText = `${sessionTurns} / ${MAX_TURNS} (${pct}%)`;
         } else { sHeader.style.display = 'none'; }
-        
         switchTab('chat');
     }
 
     function renameChat(e, id) { e.stopPropagation(); const newName = prompt("重新命名標題："); if(newName) { const s = chatHistory.find(h => h.id === id); if(s) { s.title = newName; localStorage.setItem('otterHistoryProMax', JSON.stringify(chatHistory)); renderSidebar(); } } }
-    function deleteChat(e, id) { e.stopPropagation(); if(confirm("確定刪除這筆紀錄嗎？")) { chatHistory = chatHistory.filter(h => h.id !== id); localStorage.setItem('otterHistoryProMax', JSON.stringify(chatHistory)); if(currentSessionId === id) { currentSessionId = null; chatLog.innerHTML = ""; switchTab('dashboard'); } renderSidebar(); } }
+    
+    // --- 複選刪除邏輯 ---
+    function toggleEditHistory() {
+        isEditMode = !isEditMode;
+        const scrollArea = document.getElementById('sidebarScroll');
+        document.getElementById('editHistBtn').innerText = isEditMode ? "取消" : "✏️編輯";
+        if(isEditMode) scrollArea.classList.add('edit-mode');
+        else scrollArea.classList.remove('edit-mode');
+        renderSidebar();
+    }
+    
+    function bulkDeleteHistory() {
+        const checkboxes = document.querySelectorAll('.hist-checkbox:checked');
+        if(checkboxes.length === 0) { alert("請先勾選要刪除的項目"); return; }
+        if(confirm(`確定刪除這 ${checkboxes.length} 筆紀錄嗎？`)) {
+            const idsToDelete = Array.from(checkboxes).map(cb => cb.value);
+            chatHistory = chatHistory.filter(h => !idsToDelete.includes(h.id));
+            localStorage.setItem('otterHistoryProMax', JSON.stringify(chatHistory));
+            if(idsToDelete.includes(currentSessionId)) { currentSessionId = null; chatLog.innerHTML = ""; switchTab('dashboard'); }
+            toggleEditHistory(); // 關閉編輯模式
+        }
+    }
 
     function renderSidebar() {
         const renderList = (cat, containerId) => {
             const container = document.getElementById(containerId); container.innerHTML = '';
             chatHistory.filter(h => h.category === cat).forEach(h => {
-                container.innerHTML += `<div class="history-item ${h.id === currentSessionId ? 'active' : ''}" onclick="loadChat('${h.id}')"><span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">💬 ${h.title}</span><div class="action-btns"><span class="action-btn" onclick="renameChat(event, '${h.id}')">✏️</span><span class="action-btn" style="color:var(--accent);" onclick="deleteChat(event, '${h.id}')">🗑️</span></div></div>`;
+                container.innerHTML += `
+                <div class="history-item ${h.id === currentSessionId ? 'active' : ''}" onclick="loadChat('${h.id}')">
+                    <input type="checkbox" class="hist-checkbox" value="${h.id}" onclick="event.stopPropagation()">
+                    <span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">💬 ${h.title}</span>
+                    <div class="action-btns">
+                        <span class="action-btn" onclick="renameChat(event, '${h.id}')">✏️</span>
+                    </div>
+                </div>`;
             });
         };
-        renderList('Learn', 'hist-learn'); renderList('Explore', 'hist-explore'); renderList('Assistant', 'hist-assistant');
+        renderList('Learn', 'hist-learn'); renderList('Explore', 'hist-explore');
     }
+
     function openSidebar() { document.getElementById('sidebar').classList.add('active'); document.getElementById('sbOverlay').classList.add('active'); renderSidebar(); }
-    function closeSidebar() { document.getElementById('sidebar').classList.remove('active'); document.getElementById('sbOverlay').classList.remove('active'); }
+    function closeSidebar() { document.getElementById('sidebar').classList.remove('active'); document.getElementById('sbOverlay').classList.remove('active'); if(isEditMode) toggleEditHistory(); }
     function saveHistory() { if(currentSessionId) { const s = chatHistory.find(h => h.id === currentSessionId); if(s) { s.html = chatLog.innerHTML; localStorage.setItem('otterHistoryProMax', JSON.stringify(chatHistory)); } } }
 
     function startLesson(num) { currentLessonNum = num; startChat('Path', 'Learn', currentTopic); }
@@ -474,8 +540,7 @@
         if(specTopic) currentTopic = specTopic; targetPronWord = null; 
 
         let configKey = ""; let title = "";
-        if (scenario === 'Assistant') { title = `AI/${getShortName(currentTopic, '')}`; configKey = `Asst_${currentTopic}`; }
-        else if (scenario === 'Path') { title = getShortName(currentTopic, userLevel, currentLessonNum); configKey = `Path_${currentTopic}_${userLevel}_${currentLessonNum}`; }
+        if (scenario === 'Path') { title = getShortName(currentTopic, userLevel, currentLessonNum); configKey = `Path_${currentTopic}_${userLevel}_${currentLessonNum}`; }
         else if (scenario === 'Explore') { title = getShortName(currentTopic, userLevel, ''); configKey = `Exp_${currentTopic}_${userLevel}`; }
 
         let existingSession = chatHistory.find(h => h.configKey === configKey);
@@ -498,7 +563,7 @@
     }
 
     async function fetchWordsFromDB() {
-        document.getElementById('chatTitle').innerText = "⏳ 正在載入雲端單字庫...";
+        document.getElementById('chatTitle').innerText = "⏳ 連接單字庫...";
         const tStr = dbTopicMap[currentTopic] || 'tech';
         const lStr = dbLevelMap[userLevel] || 'beginner';
         const collectionName = `${tStr}_${lStr}`; 
@@ -525,15 +590,20 @@
         let randomIdx = Math.floor(Math.random() * currentWordList.length);
         const wordData = currentWordList[randomIdx]; 
         targetPronWord = wordData.word; 
+        const meaningText = wordData.meaning || "未提供翻譯";
         
         chatLog.innerHTML += `
         <div class="elsa-card">
             <div style="color:var(--text-sub); font-size:0.8rem; margin-bottom:10px;">聽老師示範，再按麥克風跟讀：</div>
-            <div class="word">${wordData.word}</div>
+            <div class="word">
+                ${wordData.word} 
+                <span class="replay-btn" onclick="playAudio('/api/tts?text=${encodeURIComponent(wordData.word)}&voice=${globalVoice}')">🔊</span>
+            </div>
             <div class="ipa">${wordData.ipa}</div>
+            <div class="meaning">${meaningText}</div>
         </div>`;
         
-        playAudio(`/api/tts?text=${encodeURIComponent(wordData.word)}&voice=en-US-AvaNeural`);
+        playAudio(`/api/tts?text=${encodeURIComponent(wordData.word)}&voice=${globalVoice}`);
         chatLog.scrollTop = chatLog.scrollHeight; 
         saveHistory();
         document.getElementById('chatTitle').innerText = "Ready";
@@ -584,7 +654,6 @@
             
             appendMsg("You", sttData.text, "user");
             
-            // 🌟 儲存對話到記憶中 🌟
             const currentSession = chatHistory.find(h => h.id === currentSessionId);
             if(currentSession && !currentSession.messages) currentSession.messages = [];
             if(currentSession) currentSession.messages.push({"role": "user", "content": sttData.text});
@@ -601,37 +670,29 @@
                     topic: currentTopic, 
                     target_word: targetPronWord, 
                     lesson_num: currentLessonNum,
-                    history: currentSession ? currentSession.messages : []  // 🌟 將記憶傳給後端
+                    history: currentSession ? currentSession.messages : []
                 })
             });
             const data = await res.json();
             
-            // 🌟 儲存 AI 回覆到記憶中 🌟
             if(currentSession) currentSession.messages.push({"role": "assistant", "content": data.reply});
 
-            if(currentScenario === 'Assistant') {
-                appendMsg("AI 專家", data.reply, "ai");
-            } else if (currentScenario === 'Pronunciation_Eval') {
+            if (currentScenario === 'Pronunciation_Eval') {
                 const pronHtml = data.feedback ? data.feedback.pron_html : data.reply;
                 const isCorrect = data.feedback ? data.feedback.is_correct : false;
-                const meaning = data.word_meaning || ""; // 🌟 接收中文翻譯
                 
-                // 🌟 播放相對應的音效 🌟
                 playUIFeedbackSound(isCorrect);
                 
-                // 🌟 修改錯字提示文字，並加上翻譯 🌟
                 chatLog.innerHTML += `
                 <div class="elsa-card" style="border: 2px solid ${isCorrect ? 'var(--success)' : 'var(--accent)'};">
                     <div style="font-size:0.8rem; color:${isCorrect ? 'var(--success)' : 'var(--accent)'}; font-weight:bold;">${isCorrect ? '✅ 完美發音' : '❌ 需要調整'}</div>
                     <div style="font-size:1.8rem; font-weight:bold; margin:10px 0; color:#100C20;">${pronHtml}</div>
-                    ${meaning ? `<div class="meaning">${meaning}</div>` : ''}
-                    <div style="font-size:0.9rem; color:#555;">${data.reply}</div>
                 </div>`;
                 
                 if(isCorrect) { 
                     userData.words[currentTopic] = Math.min((userData.words[currentTopic]||0) + 1, MAX_WORDS);
                     saveUserData();  
-                    setTimeout(() => { chatLog.innerHTML += `<div class="bubble ai"><b>系統</b><br>太棒了！準備下一個單字。</div>`; loadNextPronWord(); }, 2000); 
+                    setTimeout(() => { loadNextPronWord(); }, 1500); 
                 }
             } else {
                 appendMsg("Coach", data.reply, "ai", data.translation);
@@ -653,7 +714,7 @@
                 }
             }
 
-            if(currentScenario !== 'Pronunciation_Eval' || !data.feedback.is_correct) { playAudio(`/api/tts?text=${encodeURIComponent(data.reply)}&voice=en-US-AvaNeural`); }
+            if(currentScenario !== 'Pronunciation_Eval' || !data.feedback.is_correct) { playAudio(`/api/tts?text=${encodeURIComponent(data.reply)}&voice=${globalVoice}`); }
             document.getElementById('chatTitle').innerText = "Ready";
             chatLog.scrollTop = chatLog.scrollHeight; saveHistory();
         } catch (e) { document.getElementById('chatTitle').innerText = "網路錯誤"; }
