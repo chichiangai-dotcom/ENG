@@ -85,7 +85,6 @@ def chat():
         topic = data.get("topic", "General")
         target_word = data.get("target_word", "")
         lesson_num = data.get("lesson_num", 1)
-        # 🌟 接收前端傳來的歷史紀錄 (最多保留最近 8 句，避免 Token 爆炸)
         chat_history = data.get("history", [])[-8:]
         
         system_prompt = ""
@@ -119,7 +118,6 @@ def chat():
                 "JSON: {\"reply\": \"English reply\", \"translation\": \"繁體中文翻譯\", \"feedback\": {\"correction\": \"Correction if any, else null\"}}"
             )
 
-        # 🌟 將歷史紀錄加入對話中 🌟
         messages = [{"role": "system", "content": system_prompt}] + chat_history + [{"role": "user", "content": user_msg}]
 
         completion = client.chat.completions.create(
